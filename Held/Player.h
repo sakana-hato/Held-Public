@@ -30,7 +30,7 @@ class TargetSystem;
 class Player
 {
 public:
-	explicit Player(SharedContext& ctx, CameraSystem& camera, InputSystem& input, Stage& stage,TargetSystem& target, Difficulty difficulty);
+	explicit Player(SharedContext& ctx, CameraSystem& camera, InputSystem& input, Stage& stage,TargetSystem& target);
 	~Player();
 
 	Player(const Player&)				= delete;
