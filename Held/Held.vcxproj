@@ -1,0 +1,289 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{06510e51-261a-47ea-963c-de0570d16a16}</ProjectGuid>
+    <RootNamespace>Held</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>./プロジェクトに追加すべきファイル_VC用;./single_include;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Animator.cpp" />
+    <ClCompile Include="BossDeathDirector.cpp" />
+    <ClCompile Include="PlayerAwakenDirector.cpp" />
+    <ClCompile Include="BoneAttachment.cpp" />
+    <ClCompile Include="Boss.cpp" />
+    <ClCompile Include="BossAttackBeam.cpp" />
+    <ClCompile Include="BossAttackCharge.cpp" />
+    <ClCompile Include="BossAttackJump.cpp" />
+    <ClCompile Include="BossAttackMagic.cpp" />
+    <ClCompile Include="BossAttackMelee.cpp" />
+    <ClCompile Include="BossAttackShockwave.cpp" />
+    <ClCompile Include="BossBehaviors.cpp" />
+    <ClCompile Include="BossHpUi.cpp" />
+    <ClCompile Include="CameraSystem.cpp" />
+    <ClCompile Include="CutsceneDirector.cpp" />
+    <ClCompile Include="EffectManager.cpp" />
+    <ClCompile Include="Enemy.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="EnemyManager.cpp" />
+    <ClCompile Include="EnemyState.cpp" />
+    <ClCompile Include="Fader.cpp" />
+    <ClCompile Include="GameClearScene.cpp" />
+    <ClCompile Include="GameOverScene.cpp" />
+    <ClCompile Include="GamepadDevice.cpp" />
+    <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="InputSystem.cpp" />
+    <ClCompile Include="Katana.cpp" />
+    <ClCompile Include="KatanaTrail.cpp" />
+    <ClCompile Include="KeyboardDevice.cpp" />
+    <ClCompile Include="LightSystem.cpp" />
+    <ClCompile Include="LoadScene.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PlayerHpUi.cpp" />
+    <ClCompile Include="PlayerState.cpp" />
+    <ClCompile Include="PostEffect.cpp" />
+    <ClCompile Include="ProjectileManager.h" />
+    <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="RockRing.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
+    <ClCompile Include="ShadowMapReceiver.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
+    <ClCompile Include="Stage.cpp" />
+    <ClCompile Include="StunChicks.cpp" />
+    <ClCompile Include="TargetMarker.cpp" />
+    <ClCompile Include="TargetSystem.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="WarningCircle.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Animator.h" />
+    <ClInclude Include="BossDeathDirector.h" />
+    <ClInclude Include="Director.h" />
+    <ClInclude Include="PlayerAwakenDirector.h" />
+    <ClInclude Include="BoneAttachment.h" />
+    <ClInclude Include="Boss.h" />
+    <ClInclude Include="BossAttack.h" />
+    <ClInclude Include="BossAttackBeam.h" />
+    <ClInclude Include="BossAttackCharge.h" />
+    <ClInclude Include="BossAttackJump.h" />
+    <ClInclude Include="BossAttackMagic.h" />
+    <ClInclude Include="BossAttackMelee.h" />
+    <ClInclude Include="BossAttackShockwave.h" />
+    <ClInclude Include="BossBehaviors.h" />
+    <ClInclude Include="BossComponent.h" />
+    <ClInclude Include="BossHpUi.h" />
+    <ClInclude Include="BossState.h" />
+    <ClInclude Include="BossStateId.h" />
+    <ClInclude Include="CameraComponent.h" />
+    <ClInclude Include="CameraMode.h" />
+    <ClInclude Include="CameraSystem.h" />
+    <ClInclude Include="Capsule.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="CutsceneDirector.h" />
+    <ClInclude Include="Difficulty.h" />
+    <ClInclude Include="EffectManager.h" />
+    <ClInclude Include="Enemy.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="EnemyComponent.h" />
+    <ClInclude Include="EnemyManager.h" />
+    <ClInclude Include="EnemyState.h" />
+    <ClInclude Include="EnemyStateId.h" />
+    <ClInclude Include="Fader.h" />
+    <ClInclude Include="GameClearScene.h" />
+    <ClInclude Include="GameOverScene.h" />
+    <ClInclude Include="GamepadDevice.h" />
+    <ClInclude Include="GameScene.h" />
+    <ClInclude Include="HealthChangeEvent.h" />
+    <ClInclude Include="HealthObserver.h" />
+    <ClInclude Include="HealthSubject.h" />
+    <ClInclude Include="HomingProjectile.h" />
+    <ClInclude Include="InputAction.h" />
+    <ClInclude Include="InputDevice.h" />
+    <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="Katana.h" />
+    <ClInclude Include="KatanaTrail.h" />
+    <ClInclude Include="KeyboardDevice.h" />
+    <ClInclude Include="LightSystem.h" />
+    <ClInclude Include="LoadScene.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerAura.h" />
+    <ClInclude Include="PlayerComponent.h" />
+    <ClInclude Include="PlayerHpUi.h" />
+    <ClInclude Include="PlayerState.h" />
+    <ClInclude Include="PlayerStateId.h" />
+    <ClInclude Include="PostEffect.h" />
+    <ClInclude Include="Precompiled.h" />
+    <ClInclude Include="Projectile.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="RockRing.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="ShadowMap.h" />
+    <ClInclude Include="ShadowMapReceiver.h" />
+    <ClInclude Include="SharedContext.h" />
+    <ClInclude Include="SoundId.h" />
+    <ClInclude Include="SoundManager.h" />
+    <ClInclude Include="Stage.h" />
+    <ClInclude Include="State.h" />
+    <ClInclude Include="StunChicks.h" />
+    <ClInclude Include="TargetMarker.h" />
+    <ClInclude Include="TargetSystem.h" />
+    <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="WarningCircle.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

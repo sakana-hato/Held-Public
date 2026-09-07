@@ -1,0 +1,473 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Game">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Game\System">
+      <UniqueIdentifier>{e0b5b573-e11f-433d-af27-52ea762b56c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\System\SceneManager">
+      <UniqueIdentifier>{76ac2dc4-a805-4778-a5f6-a69ac23429ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\System\Input">
+      <UniqueIdentifier>{5dc42b2d-ccc4-480c-9362-e18a5c7fe1d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character">
+      <UniqueIdentifier>{5e1bd5f6-c09d-4290-987b-bfa874e8dc7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Player">
+      <UniqueIdentifier>{101042b0-8482-410c-ae51-847dc07fd973}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\BaseState">
+      <UniqueIdentifier>{6c1aa95d-a326-4c92-b4f9-0dee00fb57ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Anime">
+      <UniqueIdentifier>{5d17b66d-beae-4745-8bb3-08b92290edad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Stage">
+      <UniqueIdentifier>{631d9e3c-5583-4423-8173-1df6637895d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Resource">
+      <UniqueIdentifier>{04a35cec-6647-4454-8110-e0beebd3fa10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Light">
+      <UniqueIdentifier>{97949c1a-78f9-4591-8fe1-7358ecaee5ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Light\WorldLight">
+      <UniqueIdentifier>{065e75b5-80e1-4427-820b-bb19507be914}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Light\ShadowMap">
+      <UniqueIdentifier>{451ae58e-349a-4021-8230-183736734f3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Camera">
+      <UniqueIdentifier>{5d5c8771-6e99-410f-8275-bcfec007c971}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Sound">
+      <UniqueIdentifier>{b1bc3921-7959-4819-b3b0-7cf6ee151bd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Weapon">
+      <UniqueIdentifier>{22723341-14a1-4811-b241-e158b10a12d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Enemy">
+      <UniqueIdentifier>{f1c5f5a4-4112-49d7-8708-fae26a4a2ba9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Enemy\SmallEnemy">
+      <UniqueIdentifier>{2d607f81-df82-4dc0-a3b3-844cfac5e53a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Capsule">
+      <UniqueIdentifier>{dc5672de-ca41-412b-9335-375ff8f7cc3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Scene">
+      <UniqueIdentifier>{85ea4516-e86e-4262-ae9a-cfdab5550aba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Scene\Game">
+      <UniqueIdentifier>{070218e5-24a8-40ae-830b-809950d58332}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Scene\Result">
+      <UniqueIdentifier>{2b34bff4-7729-45e5-aba7-161c209d0373}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Scene\Title">
+      <UniqueIdentifier>{c79284e3-4873-4f6a-9416-631cb7279716}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Game\Scene\Load">
+      <UniqueIdentifier>{3ed2696c-000d-4ca9-a45f-bee4f7767b0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Enemy\Boss">
+      <UniqueIdentifier>{a0def0b4-9308-4fda-8695-f0fc911912b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Target">
+      <UniqueIdentifier>{c23f76e8-2075-48f3-974a-6ae398d158dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\CutScene">
+      <UniqueIdentifier>{e1659d46-5f37-46d6-b94d-d0e6ae07deb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Effect">
+      <UniqueIdentifier>{7eec896e-698f-456c-a6d3-c80c6ba1e9fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Enemy\Boss\Attacks">
+      <UniqueIdentifier>{db7e8558-c935-466a-a864-28caf31548ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Magic">
+      <UniqueIdentifier>{d9038d88-26ea-4479-8adf-9dd40c763b91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\UI">
+      <UniqueIdentifier>{46f656a3-0f7a-4c55-9386-e6bcbbc28df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\CutScene\Director">
+      <UniqueIdentifier>{eac465dc-b464-446c-93c1-2e7f204672d1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SceneManager.cpp">
+      <Filter>Game\System\SceneManager</Filter>
+    </ClCompile>
+    <ClCompile Include="TitleScene.cpp">
+      <Filter>Game\Scene\Title</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadScene.cpp">
+      <Filter>Game\Scene\Load</Filter>
+    </ClCompile>
+    <ClCompile Include="GameScene.cpp">
+      <Filter>Game\Scene\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardDevice.cpp">
+      <Filter>Game\System\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="GamepadDevice.cpp">
+      <Filter>Game\System\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="InputSystem.cpp">
+      <Filter>Game\System\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraSystem.cpp">
+      <Filter>Game\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Game\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerState.cpp">
+      <Filter>Game\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Animator.cpp">
+      <Filter>Game\Anime</Filter>
+    </ClCompile>
+    <ClCompile Include="Stage.cpp">
+      <Filter>Game\Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Game\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="LightSystem.cpp">
+      <Filter>Game\Light\WorldLight</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
+      <Filter>Game\Light\ShadowMap</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowMapReceiver.cpp">
+      <Filter>Game\Light\ShadowMap</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundManager.cpp">
+      <Filter>Game\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="BoneAttachment.cpp">
+      <Filter>Game\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Katana.cpp">
+      <Filter>Game\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyState.cpp">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyManager.cpp">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="KatanaTrail.cpp">
+      <Filter>Game\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverScene.cpp">
+      <Filter>Game\Scene\Result</Filter>
+    </ClCompile>
+    <ClCompile Include="GameClearScene.cpp">
+      <Filter>Game\Scene\Result</Filter>
+    </ClCompile>
+    <ClCompile Include="TargetSystem.cpp">
+      <Filter>Game\Target</Filter>
+    </ClCompile>
+    <ClCompile Include="TargetMarker.cpp">
+      <Filter>Game\Target</Filter>
+    </ClCompile>
+    <ClCompile Include="PostEffect.cpp">
+      <Filter>Game\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Boss.cpp">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="BossBehaviors.cpp">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="BossAttackJump.cpp">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClCompile>
+    <ClCompile Include="BossAttackMelee.cpp">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClCompile>
+    <ClCompile Include="WarningCircle.cpp">
+      <Filter>Game\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="BossAttackShockwave.cpp">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClCompile>
+    <ClCompile Include="BossAttackBeam.cpp">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectileManager.h">
+      <Filter>Game\Magic</Filter>
+    </ClCompile>
+    <ClCompile Include="BossAttackMagic.cpp">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClCompile>
+    <ClCompile Include="BossAttackCharge.cpp">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectManager.cpp">
+      <Filter>Game\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="RockRing.cpp">
+      <Filter>Game\Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="Fader.cpp">
+      <Filter>Game\CutScene</Filter>
+    </ClCompile>
+    <ClCompile Include="StunChicks.cpp">
+      <Filter>Game\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerHpUi.cpp">
+      <Filter>Game\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="BossHpUi.cpp">
+      <Filter>Game\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CutsceneDirector.cpp">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerAwakenDirector.cpp">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClCompile>
+    <ClCompile Include="BossDeathDirector.cpp">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SceneManager.h">
+      <Filter>Game\System\SceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Precompiled.h">
+      <Filter>Game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Difficulty.h">
+      <Filter>Game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Game\System\SceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="TitleScene.h">
+      <Filter>Game\Scene\Title</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadScene.h">
+      <Filter>Game\Scene\Load</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScene.h">
+      <Filter>Game\Scene\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="InputAction.h">
+      <Filter>Game\System\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="InputDevice.h">
+      <Filter>Game\System\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardDevice.h">
+      <Filter>Game\System\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="GamepadDevice.h">
+      <Filter>Game\System\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="InputSystem.h">
+      <Filter>Game\System\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraComponent.h">
+      <Filter>Game\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraMode.h">
+      <Filter>Game\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraSystem.h">
+      <Filter>Game\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Game\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerStateId.h">
+      <Filter>Game\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="State.h">
+      <Filter>Game\Character\BaseState</Filter>
+    </ClInclude>
+    <ClInclude Include="Capsule.h">
+      <Filter>Game\Character\Capsule</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerComponent.h">
+      <Filter>Game\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Stage.h">
+      <Filter>Game\Stage</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Game\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="LightSystem.h">
+      <Filter>Game\Light\WorldLight</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMap.h">
+      <Filter>Game\Light\ShadowMap</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMapReceiver.h">
+      <Filter>Game\Light\ShadowMap</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerState.h">
+      <Filter>Game\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="SoundManager.h">
+      <Filter>Game\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="SoundId.h">
+      <Filter>Game\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="BoneAttachment.h">
+      <Filter>Game\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="Katana.h">
+      <Filter>Game\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyState.h">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyComponent.h">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyStateId.h">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyManager.h">
+      <Filter>Game\Character\Enemy\SmallEnemy</Filter>
+    </ClInclude>
+    <ClInclude Include="KatanaTrail.h">
+      <Filter>Game\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOverScene.h">
+      <Filter>Game\Scene\Result</Filter>
+    </ClInclude>
+    <ClInclude Include="GameClearScene.h">
+      <Filter>Game\Scene\Result</Filter>
+    </ClInclude>
+    <ClInclude Include="TargetSystem.h">
+      <Filter>Game\Target</Filter>
+    </ClInclude>
+    <ClInclude Include="TargetMarker.h">
+      <Filter>Game\Target</Filter>
+    </ClInclude>
+    <ClInclude Include="PostEffect.h">
+      <Filter>Game\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Boss.h">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="BossComponent.h">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="BossState.h">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="BossStateId.h">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="SharedContext.h">
+      <Filter>Game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="BossBehaviors.h">
+      <Filter>Game\Character\Enemy\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttackMelee.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttack.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttackJump.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="WarningCircle.h">
+      <Filter>Game\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttackShockwave.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttackBeam.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>Game\Magic</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttackMagic.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="HomingProjectile.h">
+      <Filter>Game\Magic</Filter>
+    </ClInclude>
+    <ClInclude Include="StunChicks.h">
+      <Filter>Game\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="BossAttackCharge.h">
+      <Filter>Game\Character\Enemy\Boss\Attacks</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerAura.h">
+      <Filter>Game\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectManager.h">
+      <Filter>Game\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="RockRing.h">
+      <Filter>Game\Stage</Filter>
+    </ClInclude>
+    <ClInclude Include="Animator.h">
+      <Filter>Game\Anime</Filter>
+    </ClInclude>
+    <ClInclude Include="Fader.h">
+      <Filter>Game\CutScene</Filter>
+    </ClInclude>
+    <ClInclude Include="HealthChangeEvent.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="HealthObserver.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="HealthSubject.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerHpUi.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="BossHpUi.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CutsceneDirector.h">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerAwakenDirector.h">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClInclude>
+    <ClInclude Include="Director.h">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClInclude>
+    <ClInclude Include="BossDeathDirector.h">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
