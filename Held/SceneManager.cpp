@@ -6,6 +6,7 @@
 #include "GameScene.h"
 #include "GameClearScene.h"
 #include "GameOverScene.h"
+#include "SoundManager.h"
 
 void SceneManager::Init()
 {
@@ -78,6 +79,7 @@ void SceneManager::Run()
         while (accumulator >= Config::FrameRate::FIXED_DT && steps < 5)
         {
             input.Update();
+            SoundManager::Instance().Update(static_cast<float>(Config::FrameRate::FIXED_DT));
            
             if (current)
             {
@@ -121,19 +123,19 @@ std::unique_ptr<Scene> SceneManager::CreateScene(SceneId id)
     switch (id)
     {
     case SceneId::Title:
-        return std::make_unique<TitleScene> (ctx, input);
+        return std::make_unique<TitleScene> (input,result);
 
     case SceneId::Load:
-        return std::make_unique<LoadScene>  (ctx, input);
+        return std::make_unique<LoadScene>(input, result);
 
     case SceneId::Game:
-        return std::make_unique<GameScene>  (ctx, input);
+        return std::make_unique<GameScene>(input, result);
 
     case SceneId::GameClear:
-        return std::make_unique<GameClearScene>(ctx, input);
+        return std::make_unique<GameClearScene>(input, result);
 
     case SceneId::GameOver:
-        return std::make_unique<GameOverScene>(ctx, input);
+        return std::make_unique<GameOverScene>(input, result);
 
     default:
         return nullptr;

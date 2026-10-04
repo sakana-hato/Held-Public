@@ -6,7 +6,9 @@
 /// <summary>
 /// ボスの基本的なコンポーネント
 /// </summary>
-struct BossComponent
+
+/*
+* struct BossComponent
 {
 	//トランスフォーム
 	VECTOR pos			= VGet(0.0f, 0.0f, 0.0f);   
@@ -44,3 +46,4 @@ struct BossComponent
 	VECTOR CapsuleBottom() const { return VGet(pos.x, pos.y + radius, pos.z); }
 	VECTOR CapsuleTop()    const { return VGet(pos.x, pos.y + height - radius, pos.z); }
 };
+*/

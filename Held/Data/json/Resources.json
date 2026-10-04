@@ -59,11 +59,49 @@
     "rock_ring"           :"Data/model/stage/rock_ring.mv1"
   },
   "images": {
-    
+    "ui_counter_button"   :"Data/image/ui/counter_button.png",
+    "ui_counter_key"      :"Data/image/ui/counter_key.png"
+  },
+  "fonts": {
+    "main":  { "path": "Data/font/myfont.otf", "name": "マイフォント" },
+    "title": { "path": "Data/font/titlefont.otf", "name": "タイトルフォント" }
   },
   "sounds": {
-     "bgm_normal"         :"Data/sound/bgm/normal2.mp3"
+     "bgm_normal"         :"Data/sound/bgm/normal1.mp3",
+     "bgm_battle"         :"Data/sound/bgm/battle.mp3",
+     "bgm_boss"           :"Data/sound/bgm/boss.mp3",
+     "se_draw_katana"     :"Data/sound/se/draw_katana.mp3",
+     "se_sheathe_katana"  :"Data/sound/se/sheathe_katana.mp3",
+     "se_enemy_hit"       :"Data/sound/se/enemy_hit.mp3",
+     "se_attack"          :"Data/sound/se/attack.mp3",
+     "se_attack_hit"      :"Data/sound/se/attack_hit.mp3",
+     "se_walk"            :"Data/sound/se/walk1.mp3",
+     "se_run"             :"Data/sound/se/run1.mp3",
+     "se_dodge"           :"Data/sound/se/dodge.mp3",
+     "se_just_dodge"      :"Data/sound/se/just_dodge.mp3",
+     "se_jump_voice1"     :"Data/sound/se/jump_voice1.mp3",
+     "se_jump_voice2"     :"Data/sound/se/jump_voice2.mp3",
+     "se_jump_voice3"     :"Data/sound/se/jump_voice3.mp3",
+     "se_counter_rush"    :"Data/sound/se/counter_rush.mp3",
+     "se_counter_finish"  :"Data/sound/se/counter_finish1.mp3",
+     "se_jump_attack_land":"Data/sound/se/jump_attack_land1.mp3",
+     "se_target_lock"     :"Data/sound/se/target_lock.mp3",
+     "se_target_unlock"   :"Data/sound/se/target_unlock.mp3",
+     "se_boss_roar"       :"Data/sound/se/bossroar.mp3",
+     "se_boss_jump_land"  :"Data/sound/se/boss_jump_land.mp3",
+     "se_boss_punch"      :"Data/sound/se/boss_punch.mp3",
+     "se_boss_sword"      :"Data/sound/se/boss_sword.mp3",
+     "se_boss_charge"     :"Data/sound/se/boss_charge.mp3",
+     "se_door_open"       :"Data/sound/se/door_open.mp3",
+     "se_door_close"      :"Data/sound/se/door_close.mp3"
+
   },
+  "sounds3d": {
+    "se_enemy_idle":     "Data/sound/se/enemy_idle.mp3",
+    "se_enemy_notice":   "Data/sound/se/enemy_notice.mp3",
+    "se_enemy_damaged":  "Data/sound/se/enemy_damaged.mp3",
+    "se_enemy_attack":  "Data/sound/se/enemy_attack.mp3"
+},
   "effects": {
     "hit_slash"           :"Data/effect/hit.efk",
     "hit_damage"          :"Data/effect/damage.efk",
@@ -81,6 +119,7 @@
     "charge_wind"         :"Data/effect/charge_wind5.efk",
     "magic_orb"           :"Data/effect/magic_orb.efk",
     "magic_reflected"     :"Data/effect/magic_reflected.efk",
-    "boss_magic_circle"   :"Data/effect/boss_magic_circle.efk"
+    "boss_magic_circle"   :"Data/effect/boss_magic_circle.efk",
+    "door_barrier"        :"Data/effect/door_barrier.efk"
   }
 }

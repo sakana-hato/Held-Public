@@ -36,29 +36,38 @@ void GameScene::OnEnter()
     stage.SetCollisionModel(ResourceManager::Instance().Model("stage_collision"));
 
     //プレイヤー生成
-    player = std::make_unique<Player>(ctx_, camera, input, stage, target);
+    player = std::make_unique<Player>(camera, input, stage, target, difficulty);
     player->SetModel(ResourceManager::Instance().Model("player_base"), 1.7f);
     player->SetKatana(ResourceManager::Instance().Model("katana"));
     player->SetSheath(ResourceManager::Instance().Model("sheath"));
-    //ctx_.player = player.get();
+   
 
     
-    boss = std::make_unique<Boss>(ctx_, camera, stage,*player, projectiles);
+    boss = std::make_unique<Boss>(camera, stage,*player, projectiles, difficulty);
+    counterUi.Init(ResourceManager::Instance().Image("ui_counter_button"), ResourceManager::Instance().Image("ui_counter_key"),input);
+    player->AddEventObserver(&counterUi);
     player->SetBoss(boss.get());
     boss->SetModel(ResourceManager::Instance().Model("boss_base"), Config::Boss::MODEL_SCALE);
     boss->SetPosition(VGet(7.0f, 0.0f, -9000.0f));
     boss->ChangeState(BossStateId::Intro);
     boss->SetSword(ResourceManager::Instance().Model("boss_sword"));
 
-    //ctx_.stage = &stage;
+   
     camera.SetStage(&stage);
 
 
+
     //雑魚敵生成
-    enemies = std::make_unique<EnemyManager>(ctx_, stage, *player);
+    enemies = std::make_unique<EnemyManager>(stage, *player);
     player->SetEnemies(enemies.get());
     enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(0, 0, -1800));
-    //enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(0, 0, -2200));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(500, 0, -1800));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(-500, 0, -1800));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(-200, 0, -2200));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(200, 0, -2600));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(500, 0, -2200));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(500, 0, -2600));
+    enemies->Spawn(ResourceManager::Instance().Model("enemy_base"), 1.7f, VGet(-500, 0, -2600));
 
     targetMarker.Init(ResourceManager::Instance().Model("target_arrow"), Config::Target::MARKER_SCALE);
 
@@ -70,8 +79,8 @@ void GameScene::OnEnter()
     boss->AddHealthObserver(&bossHpBar);
     boss->NotifyInitialHp();
 
-    cutscene    = std::make_unique<CutSceneDirector>(ctx_, camera, input, stage, *player, *boss);
-    bossDeath   = std::make_unique<BossDeathDirector>(ctx_, camera, *player, *boss);
+    cutscene    = std::make_unique<CutSceneDirector>(camera, input, stage, *player, *boss);
+    bossDeath   = std::make_unique<BossDeathDirector>(camera, *player, *boss);
 }
 
 void GameScene::OnExit()
@@ -91,6 +100,7 @@ void GameScene::Update(float dt)
 
     playerHpBar.Update(dt);
     bossHpBar.  Update(dt);
+    counterUi.  Update(dt);
 
       //メンバ変数にするのが望ましい
     if (cutscene->IsFinished() && !bossBarStarted)
@@ -141,8 +151,7 @@ void GameScene::Update(float dt)
 
     float normalDt = hitStopping ? 0.0f : dt;
 
-    //ctx_.damageTexts.Update(dt);
-
+    
     bool reflectSlow = false;
     if (reflectSlowTimer > 0.0f)
     {
@@ -215,8 +224,8 @@ void GameScene::Update(float dt)
             Boss* b = target.GetBossTarget();
             if (b)
             {
-                VECTOR tp = b->Comp().pos;
-                tp.y += b->Comp().height * 0.5f;  
+                VECTOR tp = b->Data().pos;
+                tp.y += b->Data().height * 0.5f;  
                 camera.SetLockOnTarget(true, tp);
             }
         }
@@ -225,8 +234,8 @@ void GameScene::Update(float dt)
             Enemy* t = target.GetTarget();
             if (t)
             {
-                VECTOR tp = t->Comp().pos;
-                tp.y += t->Comp().height * 0.5f;
+                VECTOR tp = t->Data().pos;
+                tp.y += t->Data().height * 0.5f;
                 camera.SetLockOnTarget(true, tp);
             }
         }
@@ -237,6 +246,12 @@ void GameScene::Update(float dt)
 
         //カメラへ実際のプレイヤー座標／向きを渡す
         camera.Update(dt, player->GetPosition(), player->GetForward());
+
+        {
+            const VECTOR camPos = camera.GetEyePosition();
+            const VECTOR camTgt = camera.GetTargetPosition();
+            SoundManager::Instance().Set3DListener(camPos, camTgt);
+        }
 
         if (player->IsDead() && gameOverPhase == GameOverPhase::None)
         {
@@ -258,6 +273,7 @@ void GameScene::Update(float dt)
     if (player)
     {
         enemies->ResolvePlayerCollision(*player);
+        enemies->ResolveEnemyCollision();
     }
 
     if (player && boss && boss->IsActive() && boss->IsAlive() && boss->IsBeamFiring() && !boss->HasHitPlayer())
@@ -268,7 +284,7 @@ void GameScene::Update(float dt)
         //カプセル同士の交差判定
         if (CapsuleMath::Intersect(beam, playerBody))
         {
-            player->TakeDamage(Config::Boss::Beam::POWER, boss->Comp().pos);
+            player->TakeDamage(Config::Boss::Beam::POWER, boss->Data().pos);
             boss->SetHitPlayer(true);
 
             VECTOR hitPos = player->GetPosition();
@@ -306,7 +322,6 @@ void GameScene::Update(float dt)
             CapsuleMath::Intersect(blade, bossBody))
         {
             boss->TakeDamage(player->GetCurrentAttackPower(), player->GetPosition());
-            //ctx_.damageTexts.Spawn(player->GetBladeCapsule().p1, player->GetCurrentAttackPower(), DamageTextManager::Kind::ToEnemy);
             lastBossHitAttackId = attackId;
 
             EffectManager::Instance().Play(ResourceManager::Instance().Effect("hit_slash"),player->GetBladeCapsule().p1,player->GetCurrentHitEffectScale());
@@ -330,15 +345,29 @@ void GameScene::Update(float dt)
             if (target.IsBossLocked())
             {
                 target.ClearBoss();  
+                SoundManager::Instance().PlaySe(SeId::TargetUnlock);   //解除音
             }
             else
             {
                 target.LockBoss(boss.get());
+                SoundManager::Instance().PlaySe(SeId::TargetLock);     //ロック音
             }
         }
         else
         {
+            //雑魚敵のロック・解除
+            const bool wasLocked = target.IsLocked();
             target.ToggleLock(*enemies, player->GetPosition());
+            const bool nowLocked = target.IsLocked();
+
+            if (nowLocked && !wasLocked)
+            {
+                SoundManager::Instance().PlaySe(SeId::TargetLock);     //ロックした
+            }
+            else if (!nowLocked && wasLocked)
+            {
+                SoundManager::Instance().PlaySe(SeId::TargetUnlock);   //解除した
+            }
         }
     }
 
@@ -359,7 +388,7 @@ void GameScene::Update(float dt)
 
     if (player)
     {
-        VECTOR bossPos = boss ? boss->Comp().pos : VGet(0, 0, 0);
+        VECTOR bossPos = boss ? boss->Data().pos : VGet(0, 0, 0);
         bossPos.y += 100.0f;   //ボスの胴を狙う
         VECTOR playerPos = player->GetPosition();
         playerPos.y += 100.0f;
@@ -444,7 +473,7 @@ void GameScene::Update(float dt)
             {
                 p->Kill();   //古い弾を消す
 
-                VECTOR toBoss = VSub(boss->Comp().pos, bulletPos);
+                VECTOR toBoss = VSub(boss->Data().pos, bulletPos);
                 toBoss.y = 0.0f;
                 const float len = VSize(toBoss);
                 if (len > 1e-4f) toBoss = VScale(toBoss, 1.0f / len);
@@ -506,7 +535,7 @@ void GameScene::Update(float dt)
             {
                 //ボスにダメージ＋怯み
                 boss->TakeDamage(p->GetPower(), bulletPos);
-                //ctx_.damageTexts.Spawn(bulletPos, p->GetPower(), DamageTextManager::Kind::ToEnemy);
+               
 
                 VECTOR hitPos = bulletPos;
                 hitPos.y += Config::Effect::MAGIC_HIT_Y_OFFSET;  
@@ -571,13 +600,13 @@ void GameScene::Update(float dt)
     if (player && boss && boss->IsActive() && boss->IsAlive() && !boss->IsCharging())
     {
         VECTOR pp = player->GetPosition();
-        const VECTOR bp = boss->Comp().pos;
+        const VECTOR bp = boss->Data().pos;
 
         VECTOR d = VSub(pp, bp);
         d.y = 0.0f;
         const float dist = VSize(d);
 
-        const float minDist = player->Comp().radius + boss->Comp().radius;
+        const float minDist = player->Data().radius + boss->Data().radius;
 
         if (dist < minDist && dist > 1e-4f)
         {
@@ -599,13 +628,13 @@ void GameScene::Update(float dt)
 
             if (CapsuleMath::Intersect(bossAttack, playerBody))
             {
-                player->TakeDamage(Config::Boss::Melee::POWER, boss->Comp().pos);
+                player->TakeDamage(Config::Boss::Melee::POWER, boss->Data().pos);
                 boss->SetHitPlayer(true);  
 
                 VECTOR hitPos = player->GetPosition();
                 hitPos.y += 100.0f;
                 EffectManager::Instance().Play(ResourceManager::Instance().Effect("hit_damage"),hitPos,Config::Effect::DAMAGE_SCALE);
-                //ctx_.damageTexts.Spawn(hitPos, Config::Boss::Melee::POWER, DamageTextManager::Kind::ToPlayer);
+                
             }
         }
     }
@@ -633,7 +662,7 @@ void GameScene::Update(float dt)
     //扉アニメ再生キーボードG / コントローラA
     XINPUT_STATE pad = {};
     GetJoypadXInputState(DX_INPUT_PAD1, &pad);
-    const bool doorNow = (CheckHitKey(KEY_INPUT_G) != 0) || (pad.Buttons[XINPUT_BUTTON_A] != 0);
+    const bool doorNow = (CheckHitKey(KEY_INPUT_G) != 0);
 
     if (doorNow && !doorTriggerPrev)
     {
@@ -643,7 +672,7 @@ void GameScene::Update(float dt)
 
     if (CheckHitKey(KEY_INPUT_P) && boss)
     {
-        VECTOR pos = boss->Comp().pos;
+        VECTOR pos = boss->Data().pos;
         pos.y += 100.0f;
         VECTOR dir = boss->DirToPlayer();
         VECTOR vel = VScale(dir, 800.0f);
@@ -659,12 +688,37 @@ void GameScene::Update(float dt)
    
 #endif
 
+    const VECTOR doorPos = VGet(7.0f, 0.0f, -6110.0f);
+    const bool slowMoNow = (player && player->IsSlowMoActive());
+
+
+    if (!enemies->AllDead() && !slowMoNow)
+    {
+        //雑魚が残っている：バリアを維持（消えていたら再生し直す）
+        if (doorBarrierInstance < 0 || !EffectManager::Instance().IsPlaying(doorBarrierInstance))
+        {
+            VECTOR barrierPos = doorPos;
+            barrierPos.y += Config::Effect::DOOR_BARRIER_HEIGHT;
+            doorBarrierInstance = EffectManager::Instance().Play(
+                ResourceManager::Instance().Effect("door_barrier"),
+                barrierPos, Config::Effect::DOOR_BARRIER_SCALE);
+        }
+    }
+    else
+    {
+        //雑魚全滅：バリアを消す
+        if (doorBarrierInstance >= 0)
+        {
+            EffectManager::Instance().Stop(doorBarrierInstance);
+            doorBarrierInstance = -1;
+        }
+    }
+
     //雑魚全滅＋扉の近く＋入力
     if (enemies->AllDead())
     {
-        const VECTOR doorPos = VGet(7.0f, 0.0f, -6110.0f);
-        VECTOR toDoor = VSub(player->GetPosition(), doorPos);
-        toDoor.y = 0.0f;
+        VECTOR toDoor   = VSub(player->GetPosition(), doorPos);
+        toDoor.y        = 0.0f;
         if (VSize(toDoor) < Config::Cutscene::TRIGGER_RANGE)
         {
             if (input.IsPressed(InputAction::Interact))
@@ -682,7 +736,7 @@ void GameScene::Update(float dt)
     static float prevHp = -1.0f;
     if (player)
     {
-        const float hp = player->Comp().hp;
+        const float hp = player->Data().hp;
         if (prevHp >= 0.0f && hp < prevHp)
         {
             glitchTimer = Config::PostEffect::GLITCH_DURATION;   // 被弾した瞬間グリッチ開始
@@ -726,40 +780,63 @@ void GameScene::Update(float dt)
     if (player && enemies)
     {
         const bool engagedEnemy = enemies->AnyEnemyEngaged();
-        const bool engagedBoss = (boss && boss->IsActive() && boss->IsAlive() && boss->IsPlayerInArena());
+        const bool engagedBoss = (boss && boss->IsActive() && boss->IsAlive() && boss->IsPlayerInArena()&& cutscene && cutscene->IsFinished());
         const bool engaged = engagedEnemy || engagedBoss;
-        
-        if (engagedBoss)
+
+        if (player && player->IsSlowMoActive())
         {
-            SoundManager::Instance().ChangeBgm(BgmId::Boss);
-        }
-        else if (engagedEnemy)
-        {
-            SoundManager::Instance().ChangeBgm(BgmId::Battle);
+            //ジャスト回避スロー中はBGMの音量を下げる（切り替えもしない）
+            SoundManager::Instance().DuckBgm(Config::Sound::BGM_SLOWMO_SCALE);
         }
         else
         {
-            SoundManager::Instance().ChangeBgm(BgmId::Normal);
-        }
+            SoundManager::Instance().UnduckBgm();
 
+            if (cutscene && cutscene->IsPlaying())
+            {
+                //カットシーン中はBGMを変えない
+            }
+            else if (engagedBoss)
+            {
+                SoundManager::Instance().ChangeBgm(BgmId::Boss, Config::Sound::BGM_BOSS_SCALE);
+                bgmCombatTimer = 0.0f;
+            }
+            else if (engagedEnemy)
+            {
+                SoundManager::Instance().ChangeBgm(BgmId::Battle);
+                bgmCombatTimer = 0.0f;
+            }
+            else
+            {
+                bgmCombatTimer += dt;
+                if (bgmCombatTimer >= Config::Sound::COMBAT_END_DELAY)
+                {
+                    SoundManager::Instance().ChangeBgm(BgmId::Normal);
+                }
+            }
+        }
+       
+       
+
+        
         if (engaged)
         {
-            //交戦中
+            //交戦中：抜刀
             combatEndTimer = 0.0f;
             if (!player->IsKatanaDrawn() && !player->IsDrawingKatana())
             {
-                player->ToggleKatanaDraw();   //抜刀
+                player->ToggleKatanaDraw();
             }
         }
         else
         {
-            //非交戦
+            //非交戦：一定時間後に納刀
             if (player->IsKatanaDrawn() && !player->IsDrawingKatana())
             {
                 combatEndTimer += dt;
                 if (combatEndTimer >= Config::Katana::SHEATHE_DELAY)
                 {
-                    player->ToggleKatanaDraw();   //納刀
+                    player->ToggleKatanaDraw();
                     combatEndTimer = 0.0f;
                 }
             }
@@ -788,7 +865,7 @@ void GameScene::Update(float dt)
     if (bossDeath->IsFinished() && !isBossDefeated)
     {
         isBossDefeated = true;
-        ctx_.isGameClear = true;               //クリアフラグ
+        result.isGameClear = true;                  //クリアフラグ
         RequestChange(SceneId::GameClear);     //ゲームクリアシーンへ
     }
     else if (gameOverPhase == GameOverPhase::Done)  
@@ -903,8 +980,8 @@ void GameScene::Draw()
         Boss* b = target.GetBossTarget();
         if (b)
         {
-            VECTOR head = b->Comp().pos;
-            head.y += b->Comp().height + Config::Boss::BOSS_MARKER_EXTRA;  
+            VECTOR head = b->Data().pos;
+            head.y += b->Data().height + Config::Boss::BOSS_MARKER_EXTRA;
             targetMarker.Draw(head);
         }
     }
@@ -913,8 +990,8 @@ void GameScene::Draw()
         Enemy* t = target.GetTarget();
         if (t)
         {
-            VECTOR head = t->Comp().pos;
-            head.y += t->Comp().height;
+            VECTOR head = t->Data().pos;
+            head.y += t->Data().height;
             targetMarker.Draw(head);
         }
     }
@@ -956,6 +1033,7 @@ void GameScene::Draw()
 
     playerHpBar.Draw();
     bossHpBar.  Draw();
+    counterUi.  Draw();
 
 #if defined(_DEBUG)
   
@@ -994,4 +1072,3 @@ void GameScene::Draw()
     cutscene->Draw();
     Fader::GetInstance().Draw();
 }
-

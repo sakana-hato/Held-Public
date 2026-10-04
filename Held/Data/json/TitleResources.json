@@ -1,0 +1,25 @@
+{
+    "models": {
+        "stage"             :"Data/model/stage/stage.mv1",
+        "stage_collision"   :"Data/model/stage/stage_collision.mv1",
+        "player_base"       :"Data/model/player/Tpose.mv1",
+        "anim_walk"         :"Data/model/player/walk10.mv1",
+        "anim_idle"         :"Data/model/player/idle.mv1",
+        "anim_draw"         :"Data/model/player/draw10.mv1",
+        "katana"            :"Data/model/weapon/katana.mv1",
+        "sheath"            :"Data/model/weapon/sheath.mv1"
+    },
+    "sounds": {
+         "bgm_cave"         :"Data/sound/bgm/cave.mp3",
+        "bgm_title"         :"Data/sound/bgm/title.mp3",
+        "se_draw_katana"    :"Data/sound/se/draw_katana.mp3",
+        "se_walk"           :"Data/sound/se/walk1.mp3",
+        "se_title_voice"    :"Data/sound/se/title_voice.mp3"
+    },
+    "images": {
+    "ui_title_logo": "Data/image/ui/title_logo.png"
+  },
+  "fonts": {
+    "title": { "path": "Data/font/AlbertSans-Bold.ttf", "name": "Albert Sans" }
+}
+}

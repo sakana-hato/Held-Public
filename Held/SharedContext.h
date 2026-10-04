@@ -1,5 +1,5 @@
 #pragma once
-#include "Difficulty.h"
+//#include "Difficulty.h"
 //#include "InputSystem.h"
 //#include "CameraSystem.h"
 //#include "TargetSystem.h"
@@ -19,7 +19,7 @@
 /// </summary>
 struct SharedContext
 {
-	Difficulty difficulty = Difficulty::Normal;
+	//Difficulty difficulty = Difficulty::Normal;
 
 	//InputSystem  input;
 
@@ -39,6 +39,6 @@ struct SharedContext
 
 	//ProjectileManager projectiles;
 
-	float clearTimeSec	= 0.0f;		//ボス撃破までの秒数;
-	bool isGameClear	= false;	//ゲームクリアしたかどうか
+	//float clearTimeSec	= 0.0f;		//ボス撃破までの秒数;
+	//bool isGameClear	= false;	//ゲームクリアしたかどうか
 };

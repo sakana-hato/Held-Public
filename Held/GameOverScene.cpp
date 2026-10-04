@@ -43,7 +43,7 @@ void GameOverScene::Update(float dt)
     // Œˆ’è
     if (input.IsPressed(InputAction::Confirm))
     {
-        RequestChange(cursorIndex == 0 ? SceneId::Load : SceneId::Title);
+        RequestChange(cursorIndex == 0 ? SceneId::Game : SceneId::Title);
     }
 }
 

@@ -6,6 +6,7 @@
 #include "ResourceManager.h"
 #include "Player.h"
 #include "Stage.h"
+#include "SoundManager.h"
 #include "BossState.h"
 #include "BossAttackMelee.h"
 #include "BossBehaviors.h"
@@ -15,19 +16,23 @@
 #include "BossAttackMagic.h"
 #include "BossAttackCharge.h"
 
-Boss::Boss(SharedContext& ctx, CameraSystem& camera, Stage& stage,Player& player, ProjectileManager& projectiles)
-	:ctx_(ctx)
-	,camera(camera)
-	,stage(stage)
+Boss::Boss( CameraSystem& camera, Stage& stage,Player& player, ProjectileManager& projectiles, Difficulty difficulty)
+	:camera(camera)
+	,Character(stage)
 	,player(player)
 	,projectiles(projectiles)
 {
+	data.radius = Config::Boss::RADIUS;
+	data.height = Config::Boss::HEIGHT;
+	data.hp		= Config::Boss::HP_MAX;
+	hpMax		= Config::Boss::HP_MAX;
+
 	BuildStates();
 	BuildAttacks();
 
 	//難易度別HP
-	comp.hp = DifficultyParam::BossHP(ctx_.difficulty);
-	comp.hpMax = comp.hp;
+	data.hp = DifficultyParam::BossHP(difficulty);
+	hpMax = data.hp;
 
 	current = states[static_cast<size_t>(BossStateId::Intro)].get();
 }
@@ -92,12 +97,6 @@ void Boss::SetModel(int handle, float scale)
 	{
 		rockRing.Init(rockModel);
 	}
-	/*
-	* if (current)
-	{
-		current->OnEnter();
-	}
-	*/
 	
 }
 
@@ -190,8 +189,8 @@ void Boss::Update(float dt)
 
 	if (modelHandle >= 0)
 	{
-		const float yawRad = (comp.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
-		MV1SetPosition(modelHandle, comp.pos);
+		const float yawRad = (data.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
+		MV1SetPosition(modelHandle, data.pos);
 		MV1SetRotationXYZ(modelHandle, VGet(0.0f, yawRad, 0.0f));
 		MV1SetScale(modelHandle, VGet(modelScale, modelScale, modelScale));
 	}
@@ -333,7 +332,7 @@ void Boss::Draw() const
 	//HP・状態
 	DrawFormatString(10, 200, GetColor(255, 200, 0),
 		"BOSS HP:%.0f/%.0f  phase:%d  state:%d",
-		comp.hp, comp.hpMax, comp.phase, static_cast<int>(CurrentStateId()));
+		data.hp, hpMax, phase, static_cast<int>(CurrentStateId()));
 
 	//行動範囲（ボス部屋）を円で描く
 	{
@@ -375,20 +374,20 @@ void Boss::Draw() const
 
 void Boss::TakeDamage(float amount, const VECTOR& attackerPos)
 {
-	if (comp.IsDead())
+	if (data.IsDead())
 	{
 		return;
 	}
 
-	comp.hp -= amount;
-	if (comp.hp <= 0.0f)
+	data.hp -= amount;
+	if (data.hp <= 0.0f)
 	{
-		comp.hp = 0.0f;
+		data.hp = 0.0f;
 		ChangeState(BossStateId::Dead);
 		return;
 	}
 
-	health.NotifyHealthChanged(comp.hp, Config::Boss::HP_MAX, -amount);
+	health.NotifyHealthChanged(data.hp, Config::Boss::HP_MAX, -amount);
 	
 }
 
@@ -402,7 +401,7 @@ void Boss::EnterStagger()
 
 void Boss::UpdatePhase()
 {
-	const float rate = comp.HpRate();
+	const float rate = HpRate();
 	int newPhase = 0;
 	if (rate <= Config::Boss::PHASE3_HP_RATE)
 	{
@@ -417,25 +416,25 @@ void Boss::UpdatePhase()
 		newPhase = 0;
 	}
 
-	if (newPhase >= 1 && comp.phase == 0 && !swordDrawn)
+	if (newPhase >= 1 && phase == 0 && !swordDrawn)
 	{
-		comp.phase = newPhase;
+		phase = newPhase;
 		ChangeState(BossStateId::DrawSword);
 		return;
 	}
 
-	comp.phase = newPhase;
+	phase = newPhase;
 }
 
 void Boss::StartCooldown()
 {
 	//フェーズが進むほど攻撃間隔が短くなる
 	float cd = Config::Boss::ATTACK_COOLDOWN_P1;
-	if (comp.phase == 1)
+	if (phase == 1)
 	{
 		cd = Config::Boss::ATTACK_COOLDOWN_P2;
 	}
-	else if (comp.phase == 2)
+	else if (phase == 2)
 	{
 		cd = Config::Boss::ATTACK_COOLDOWN_P3;
 	}
@@ -466,9 +465,9 @@ BossAttack* Boss::PickAttack()
 Capsule Boss::GetBodyCapsule() const
 {
 	Capsule cap;
-	cap.p0 = comp.CapsuleBottom();
-	cap.p1 = comp.CapsuleTop();
-	cap.radius = comp.radius;
+	cap.p0 = data.CapsuleBottom();
+	cap.p1 = data.CapsuleTop();
+	cap.radius = data.radius;
 	return cap;
 }
 
@@ -529,8 +528,8 @@ Capsule Boss::GetAttackCapsule() const
 	}
 	else
 	{
-		cap.p0 = comp.pos;
-		cap.p1 = comp.pos;
+		cap.p0 = data.pos;
+		cap.p1 = data.pos;
 		cap.radius = 0.0f;
 	}
 	return cap;
@@ -567,7 +566,7 @@ Capsule Boss::GetSwordBladeCapsule() const
 
 float Boss::DistanceToPlayer() const
 {
-	VECTOR dis = VSub(player.GetPosition(), comp.pos);
+	VECTOR dis = VSub(player.GetPosition(), data.pos);
 	dis.y = 0.0f;
 	return VSize(dis);
 }
@@ -575,7 +574,7 @@ float Boss::DistanceToPlayer() const
 VECTOR Boss::DirToPlayer() const
 {
 	
-	VECTOR dir = VSub(player.GetPosition(), comp.pos);
+	VECTOR dir = VSub(player.GetPosition(), data.pos);
 	dir.y = 0.0f;
 	const float len = VSize(dir);
 
@@ -583,7 +582,7 @@ VECTOR Boss::DirToPlayer() const
 	{
 		return VScale(dir, 1.0f / len);
 	}
-	return comp.Forward();
+	return data.Forward();
 }
 
 float Boss::YawToPlayerDeg() const
@@ -592,78 +591,29 @@ float Boss::YawToPlayerDeg() const
 	return std::atan2(dir.x, dir.z) * 180.0f / DX_PI_F;
 }
 
-void Boss::FaceTowardDeg(float targetYawDeg, float dt)
-{
-	float diff = targetYawDeg - comp.facingYawDeg;
-	while (diff > 180.0f)
-	{
-		diff -= 360.0f;
-	}
 
-	while (diff < -180.0f)
-	{
-		diff += 360.0f;
-	}
-
-	const float maxTurn = Config::Boss::TURN_SPEED * dt;
-	if (diff > maxTurn)
-	{
-		diff = maxTurn;
-	}
-
-	if (diff < -maxTurn)
-	{
-		diff = -maxTurn;
-	}
-
-	comp.facingYawDeg += diff;
-}
 
 void Boss::MoveTowardPlayer(float speed, float dt)
 {
 	const VECTOR dir = DirToPlayer();
-	comp.pos.x += dir.x * speed * dt;
-	comp.pos.z += dir.z * speed * dt;
+	data.pos.x += dir.x * speed * dt;
+	data.pos.z += dir.z * speed * dt;
 
 	//行動範囲（ボス部屋）内に制限
-	const VECTOR arenaCenter = VGet(Config::Boss::ARENA_CENTER_X, comp.pos.y, Config::Boss::ARENA_CENTER_Z);
-	VECTOR fromCenter = VSub(comp.pos, arenaCenter);
+	const VECTOR arenaCenter = VGet(Config::Boss::ARENA_CENTER_X, data.pos.y, Config::Boss::ARENA_CENTER_Z);
+	VECTOR fromCenter = VSub(data.pos, arenaCenter);
 	fromCenter.y = 0.0f;
 	const float distFromCenter = VSize(fromCenter);
 	if (distFromCenter > Config::Boss::ARENA_RADIUS)
 	{
 		//範囲の縁に押し戻す
 		const VECTOR clamped = VScale(VNorm(fromCenter), Config::Boss::ARENA_RADIUS);
-		comp.pos.x = arenaCenter.x + clamped.x;
-		comp.pos.z = arenaCenter.z + clamped.z;
+		data.pos.x = arenaCenter.x + clamped.x;
+		data.pos.z = arenaCenter.z + clamped.z;
 	}
 
 	//壁で止める
-	comp.pos = stage.ResolveWall(comp.pos, comp.radius, comp.height);
-}
-
-float Boss::FloorYAt(const VECTOR& p) const
-{
-	float y = 0.0f;
-	if (stage.GetFloorY(p, y))
-	{
-		return y;
-	}
-	return 0.0f;
-}
-
-void Boss::ApplyGravity(float dt)
-{
-	const float floorY = FloorYAt(comp.pos);
-
-	comp.vy -= Config::Player::Status::GRAVITY * dt;
-	comp.pos.y += comp.vy * dt;
-
-	if (comp.pos.y <= floorY)
-	{
-		comp.pos.y = floorY;
-		comp.vy = 0.0f;
-	}
+	data.pos = stage.ResolveWall(data.pos,data.radius, data.height);
 }
 
 void Boss::PlayAnim(int animModel, int animIndex, bool loop)
@@ -678,7 +628,9 @@ void Boss::PlayRoar()
 	{
 		animator.Play(roar, 0, false);
 	}
+	SoundManager::Instance().PlaySe(SeId::BossRoar);
 }
+
 
 bool Boss::IsIntroFinished()const
 {
@@ -727,7 +679,7 @@ void Boss::DrawBeamWarning() const
 	//予告の始点・終点（地面の高さに）
 	VECTOR s = beam->PredictStart();
 	VECTOR e = beam->PredictEnd();
-	const float y = FloorYAt(comp.pos) + 5.0f;   //地面に少し浮かせて
+	const float y = FloorYAt(data.pos) + 5.0f;   //地面に少し浮かせて
 	s.y = y;
 	e.y = y;
 
@@ -786,7 +738,7 @@ void Boss::DrawChargeWarning() const
 
 	VECTOR s = charge->AimStart();
 	VECTOR e = charge->AimEnd();
-	const float y = FloorYAt(comp.pos) + 5.0f;
+	const float y = FloorYAt(data.pos) + 5.0f;
 	s.y = y;
 	e.y = y;
 

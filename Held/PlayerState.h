@@ -20,18 +20,20 @@ protected:
 	bool MoveByInput(float speed, float dt);
 };
 
-/// 待機・移動・ダッシュ（地上の基本。ここから各アクションへ分岐）
+/// 待機・移動・ダッシュ（地上の基本)
 class BaseMovement final : public PlayerState
 {
 public:
 	using PlayerState::PlayerState;
 	void OnEnter() override;
+	void OnExit() override;
 	void Update(float dt) override;
 	int  Id() const override { return static_cast<int>(PlayerStateId::BaseMovement); }
 
 private:
 	void ResetIdleTrigger();
 	void PlayIdle();
+	void StopFootsteps();
 
 	bool  wasDashMoving = false;   //前フレーム、ダッシュで移動していたか
 	bool  runStopping	= false;   //runstop再生中か
@@ -41,9 +43,12 @@ private:
 	float idleTimer = 0.0f;
 	float idleTrigger = 0.0f;
 	bool  idleActing = false;
+
+	bool footstepWalkPlaying	= false;   //歩き足音を鳴らしているか
+	bool footstepRunPlaying		= false;   //走り足音を鳴らしているか
 };
 
-/// 回避（開始直後にジャスト回避受付ウィンドウ）
+/// 回避
 class DodgeState final : public PlayerState
 {
 public:
@@ -58,7 +63,7 @@ private:
 	bool   linkToRun = false;
 };
 
-/// ジャンプ（上昇・下降。空中で攻撃 → 落下攻撃）
+/// ジャンプ
 class JumpState final : public PlayerState
 {
 public:
@@ -69,7 +74,7 @@ public:
 
 };
 
-/// 落下攻撃（急降下→着地硬直）
+/// 落下攻撃
 class JumpAttackState final : public PlayerState
 {
 public:
@@ -88,7 +93,7 @@ private:
 	VECTOR homingDir = {};
 };
 
-/// 地上コンボ攻撃（COMBO_MAX 段。受付ウィンドウで派生）
+/// 地上コンボ攻撃
 class AttackState final : public PlayerState
 {
 public:
@@ -123,7 +128,7 @@ private:
 };
 
 
-/// 必殺技（前方突進。ゲージ消費）
+/// 必殺技
 class UltimateState final : public PlayerState
 {
 public:
@@ -149,6 +154,7 @@ private:
 	VECTOR knockDir = VGet(0.0f, 0.0f, 0.0f);
 };
 
+//死亡時のステート
 class DeadState final : public PlayerState
 {
 public:

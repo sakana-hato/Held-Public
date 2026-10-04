@@ -2,7 +2,6 @@
 
 /// <summary>
 /// ゲームステータス
-/// csvにすればよかった
 /// </summary>
 namespace Config 
 {
@@ -58,6 +57,23 @@ namespace Config
 		constexpr float MAGIC_ORB_SCALE			= 1.0f;		// 魔法弾のエフェクト
 		constexpr float	MAGIC_REFLECTED_SCALE	= 1.0f;		// 跳ね返した魔法弾のエフェクト
 		constexpr float BOSS_MAGIC_CIRCLE_SCALE = 2.0f;
+		constexpr float DOOR_BARRIER_HEIGHT		= 1.0f;		//バリアの高さ調整
+		constexpr float DOOR_BARRIER_SCALE		= 1.0f;		//バリアのスケール
+	}
+
+	//音関連
+	namespace Sound
+	{
+		constexpr float BGM_FADE_TIME			= 1.7f;		//BGMクロスフェードの時間（秒）
+		constexpr float COMBAT_END_DELAY		= 3.0f;		//戦闘終了から通常BGMに戻るまでの待ち時間
+		constexpr float FOOTSTEP_VOLUME			= 0.6f;		//足音の音量倍率
+		constexpr float BGM_SLOWMO_SCALE		= 0.1f;		//ジャスト回避スロー中のBGM音量倍
+		constexpr float ENEMY_VOICE_RADIUS		= 2000.0f;  //声が聞こえる範囲
+		constexpr float ENEMY_IDLE_MIN_INTERVAL = 3.0f;		//待機ボイスの最短間隔（秒）
+		constexpr float ENEMY_IDLE_MAX_INTERVAL = 10.0f;	//待機ボイスの最長間隔（秒）
+
+		constexpr float BGM_CAVE_SCALE = 1.5f;
+		constexpr float BGM_BOSS_SCALE = 0.7f;    //ボス戦BGM
 	}
 
 	//カメラ関連
@@ -136,6 +152,26 @@ namespace Config
 			constexpr float FOLLOW_SPEED	= 8.0f;   //減る追従速度
 			constexpr float REVEAL_TIME		= 2.0f;   //みなぎる演出の時間（秒）
 			constexpr char  BOSS_NAME[]		= "鹿王　アドルフ";   //ボス名
+		}
+
+		namespace Counter
+		{
+			constexpr int   POS_X			= 850;    //表示位置X（画面中央あたり）
+			constexpr int   POS_Y			= 400;    //表示位置Y
+			constexpr int   C_X				= 0;	  //回転X
+			constexpr int	C_Y				= 0;	  //回転Y
+			constexpr float SCALE_X			= 0.3;    //X軸の画像の拡大率
+			constexpr float SCALE_Y			= 0.3;    //Y軸の画像の拡大率
+			constexpr float ANGLE			= 0;	  //描画角度
+			constexpr float GLOW_TIME		= 3.0f;   //発光が通常に戻るまでの時間
+			constexpr int   GLOW_ADD		= 255;    //発光の最大の強さ
+			constexpr int   TEXT_OFFSET_X	= 50;
+			constexpr int   FONT_SIZE		= 38;     //フォントサイズ
+			constexpr int	TEXT_X			= 1000;   //文字のX座標
+			constexpr int	TEXT_Y			= 450;		//文字のY座標
+			constexpr const char* FONT_ID	= "main";   //使うフォントのid
+			constexpr const char* TEXT_PAD	= "ボタン";     //パッド接続時の文字
+			constexpr const char* TEXT_KEY	= "クリック";   //キーボード時の文字
 		}
 	}
 
@@ -589,6 +625,9 @@ namespace Config
 		//斬撃関連
 		constexpr float TRAIL_FLASH_MAX		= 1.0f; // 斬った瞬間の発光の強さ
 		constexpr float TRAIL_FLASH_DECAY	= 4.0f; // 発光が戻る速さ
+
+		constexpr float DRAW_SE_TIME		= 0.13f;
+		constexpr float SHEATHE_SE_TIME		= 0.14f;   //納刀SEを鳴らすタイミング
 	}
 
 	//鞘関連
@@ -650,7 +689,63 @@ namespace Config
 	//タイトルシーン(たぶん消す)
 	namespace Title
 	{
-		constexpr int   TITLE_BLINK_FRAMES = 60;//「Press Button」点滅間隔
+		//constexpr int   TITLE_BLINK_FRAMES	= 60;//「Press Button」点滅間隔
+		constexpr float FADE_SPEED			= 12.0f;//タイトルのフェードアウト時間
+
+		//演出の位置
+		constexpr float PLAYER_START_X = 0.0f;      //プレイヤーのX位置（廊下の中央）
+		constexpr float PLAYER_START_Z = -900.0f;   //歩き始めのZ（プレイヤー初期位置）
+		constexpr float DOOR_STAND_Z = -5000.0f;  //扉前で立ち止まるZ
+
+		constexpr float VOICE_DELAY		= 1.0f;   //画面が出てからセリフを言うまでの間
+		constexpr float STANDBY_TIME	= 4.0f;   //歩き出す前の待機時間
+		//歩行
+		constexpr float WALK_SPEED = 300.0f;   //歩く速さ
+
+		//歩行中のカメラ（プレイヤーからの相対位置）
+		constexpr float CAM_START_OFFSET_X = -300.0f;    //開始：右
+		constexpr float CAM_START_OFFSET_Y = 60.0f;     //開始：やや下から見上げる
+		constexpr float CAM_START_OFFSET_Z = 280.0f;    //開始：斜め後ろ
+		constexpr float CAM_END_OFFSET_X = 400.0f;    //終了：真横（右）
+		constexpr float CAM_END_OFFSET_Y = 150.0f;    //終了：少し高く
+		constexpr float CAM_END_OFFSET_Z = 0.0f;      //終了：横並び
+		constexpr float CAM_LOOK_HEIGHT = 170.0f;    //注視点の高さ
+
+		//扉前のカメラ（カットシーンと同じような見上げる構図）
+		constexpr float DOOR_CAM_POS_X = 7.0f;
+		constexpr float DOOR_CAM_POS_Y = 40.0f;
+		constexpr float DOOR_CAM_POS_Z = -4600.0f;
+		constexpr float DOOR_CAM_TGT_X = 7.0f;
+		constexpr float DOOR_CAM_TGT_Y = 150.0f;
+		constexpr float DOOR_CAM_TGT_Z = -5200.0f;
+
+		//待ち時間
+		constexpr float ARRIVE_WAIT_TIME = 0.5f;   //扉前に着いてから抜刀までの間
+		constexpr float DRAW_WAIT_TIME = 1.2f;   //抜刀からロゴ表示までの間
+
+		constexpr int    LOGO_POS_X = 640;     //描画位置X
+		constexpr int    LOGO_POS_Y = 100;     //描画位置Y
+		constexpr int    LOGO_CENTER_X = 256;     //画像の中心X（画像幅の半分）
+		constexpr int    LOGO_CENTER_Y = 128;     //画像の中心Y（画像高さの半分）
+		constexpr double LOGO_SCALE_X = 1.0;     //X方向の拡大率
+		constexpr double LOGO_SCALE_Y = 1.0;     //Y方向の拡大率
+		constexpr double LOGO_ANGLE = 0.0;     //回転角
+		constexpr float  LOGO_FADE_TIME = 1.5f;   //フェードインの時間
+
+		constexpr const char* FONT_ID = "title";   //使うフォントのid
+		constexpr int         FONT_SIZE = 52;        //フォントサイズ
+
+		constexpr const char* TEXT_PAD = "PRESS B";       //パッド接続時
+		constexpr const char* TEXT_KEY = "PRESS SPACE";   //キーボード時
+
+		constexpr int   TEXT_POS_X = 450;    //文字の位置X
+		constexpr int   TEXT_POS_Y = 500;    //文字の位置Y
+		constexpr int   TEXT_EDGE = 2;      //縁取りの太さ（ピクセル）
+
+		constexpr float BLINK_SPEED = 2.0f;   //明滅の速さ
+		constexpr float BLINK_MIN = 0.3f;   //一番暗いときの明るさ（0.0で真っ黒、1.0で変化なし）
+
+
 	}
 
 	//ゲームオーバーシーン関連

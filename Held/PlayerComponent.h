@@ -6,7 +6,10 @@
 /// <summary>
 /// プレイヤーの「状態データ」だけを持つコンポーネント。
 /// </summary>
-struct PlayerComponent
+/// 
+
+/*
+* struct PlayerComponent
 {
 	//トランスフォーム 
 	VECTOR pos = VGet(0.0f, Config::Graund::GROUND_Y, -900.0f);	//足元基準のワールド座標
@@ -43,3 +46,4 @@ struct PlayerComponent
 	VECTOR CapsuleBottom() const { return VGet(pos.x, pos.y + radius, pos.z); }
 	VECTOR CapsuleTop()    const { return VGet(pos.x, pos.y + height - radius, pos.z); }
 };
+*/

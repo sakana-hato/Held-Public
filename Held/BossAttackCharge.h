@@ -40,6 +40,8 @@ private:
 	float  orbitAngle = 0.0f;    //外周の現在角度
 	float  orbitProgress = 0.0f; //今の外周で進んだ量
 
+	bool dashSePlayed = false;   //突進の音を鳴らしたか
+
 	int chargeEffectInstance = -1;   //突進の走行感エフェクト
 
 	VECTOR dashDir = {};         //突進方向

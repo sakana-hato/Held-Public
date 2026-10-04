@@ -1,6 +1,12 @@
 #pragma once
 #include "Scene.h"
-#include "SharedContext.h"
+#include "TitleDirector.h"
+#include "Stage.h"
+#include "Player.h"
+#include "PostEffect.h"
+#include "CameraSystem.h"
+#include "TargetSystem.h"
+#include "Difficulty.h"
 
 /// <summary>
 /// タイトルシーン
@@ -11,9 +17,8 @@ public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
-	/// <param name="ctx"></param>共通データ
-	explicit TitleScene(SharedContext& ctx, InputSystem& input) 
-		: Scene(input), ctx_(ctx) {}
+	explicit TitleScene(InputSystem& input, GameResult& result)
+		: Scene(input,result) {}
 
 	/// <summary>
 	/// デストラクタ
@@ -28,7 +33,7 @@ public:
 	/// <summary>
 	///　終了
 	/// </summary>
-	//void OnExit()			override;
+	void OnExit()			override;
 
 	/// <summary>
 	/// 更新
@@ -41,8 +46,18 @@ public:
 	/// </summary>
 	void Draw()				override;
 private:
-	//共通データ
-	SharedContext& ctx_;
 
-	int blinkTimer = 0;//点滅カウンター(たぶん消す)
+	float blinkTimer = 0.0f;//点滅カウンター
+	bool fadingOut = false;//フェードアウト中か
+	float logoTimer = 0.0f;   //ロゴが出てからの経過時間
+	int fontHandle = -1;   //タイトル文字用フォント
+	bool prevPressed = false;
+
+	CameraSystem camera;
+	Stage stage;
+	std::unique_ptr<Player> player;
+	std::unique_ptr<TitleDirector> titleDirector;
+	TargetSystem target;                             
+	PostEffect   post;
+	Difficulty   difficulty = Difficulty::Normal;    
 };

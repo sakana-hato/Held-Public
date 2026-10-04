@@ -140,7 +140,7 @@ void CutSceneDirector::Update(float dt)
 				boss.ChangeState(BossStateId::Intro);
 
 				
-				VECTOR bossPos = boss.Comp().pos;//ボスの足元に魔法陣を出す
+				VECTOR bossPos = boss.Data().pos;//ボスの足元に魔法陣を出す
 
 				
 				bossPos.y = boss.FloorYAt(bossPos);//地面の高さ

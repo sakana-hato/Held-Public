@@ -26,7 +26,7 @@ void BossDeathDirector::Start()
 void BossDeathDirector::SetupDeathCamera()
 {
 	
-	const VECTOR bossPos = boss.Comp().pos;
+	const VECTOR bossPos = boss.Data().pos;
 
 	//アリーナ中心（壁対処B案：ここへ向かう方向にカメラを引く）
 	const VECTOR arenaCenter = VGet(Config::Boss::ARENA_CENTER_X, 0.0f, Config::Boss::ARENA_CENTER_Z);
@@ -72,7 +72,7 @@ void BossDeathDirector::EnterPhase(Phase next)
 	{
 		//ボスの足元に魔法陣エフェクトを出す
 		{
-			VECTOR pos = boss.Comp().pos;
+			VECTOR pos = boss.Data().pos;
 			pos.y = boss.FloorYAt(pos) + 10.0f;
 			magicCircleInstance = EffectManager::Instance().Play(ResourceManager::Instance().Effect("boss_appear1"),pos, Config::Effect::BOSS_APPEAR_SCALE);
 		}
@@ -82,7 +82,7 @@ void BossDeathDirector::EnterPhase(Phase next)
 	{
 		//沈み始めのY座標を記録するだけ（実際に沈めるのは Update）
 		{
-			sinkStartY = boss.Comp().pos.y;
+			sinkStartY = boss.Data().pos.y;
 		}
 		break;
 	}
@@ -131,7 +131,7 @@ void BossDeathDirector::Update(float dt)
 	{
 		//ボスを地面の下へ沈めていく
 		{
-			auto& comp = boss.Comp();
+			auto& comp = boss.Data();
 
 			//イーズインで、だんだん速く沈む
 			const float t = timer / Config::Boss::Death::SINK_TIME;

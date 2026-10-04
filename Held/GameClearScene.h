@@ -1,6 +1,6 @@
 #pragma once
 #include "Scene.h"
-#include "SharedContext.h"
+
 
 /// <summary>
 /// ゲームクリア画面
@@ -12,8 +12,8 @@ public:
     /// コンストラクタ
     /// </summary>
     /// <param name="ctx"></param>共通データ
-    explicit GameClearScene(SharedContext& ctx, InputSystem& input)
-        : Scene(input), ctx_(ctx) {}
+    explicit GameClearScene(InputSystem& input, GameResult& result)
+        : Scene(input,result){}
 
     /// <summary>
     /// デストラクタ
@@ -42,7 +42,7 @@ public:
     void Draw()    override;
 
 private:
-    SharedContext& ctx_;//共通データ
+    //SharedContext& ctx_;//共通データ
 
     char  rank          = 'E';      // 評価ランク（AからE）
     int   cursorIndex   = 0;        // 0=もう一度, 1=タイトルへ

@@ -5,11 +5,16 @@
 #include "SharedContext.h"
 #include "Stage.h"
 #include "Player.h"
+#include "SoundManager.h"
 
 Enemy* EnemyManager::Spawn(int modelHandle, float scale, const VECTOR& pos)
 {
-	auto e = std::make_unique<Enemy>(ctx_,stage, player);
-	e->SetModel(modelHandle, scale);
+	auto e = std::make_unique<Enemy>(stage, player);
+
+	//モデルを複製して、敵ごとに独立したアニメーションにする
+	const int dupModel = MV1DuplicateModel(modelHandle);
+	e->SetModel(dupModel, scale);
+
 	e->SetPosition(pos);
 
 	Enemy* raw = e.get();
@@ -83,6 +88,8 @@ bool EnemyManager::CheckPlayerAttack(const Capsule& blade, float power, int atta
 			e->TakeDamage(power, attackerPos);
 			hitThisAttack_.push_back(raw);
 			hitAny = true;   
+			SoundManager::Instance().PlaySe(SeId::Attack_hit);
+			SoundManager::Instance().PlaySe(SeId::EnemyHit);
 		}
 	}
 
@@ -116,13 +123,13 @@ void EnemyManager::ResolvePlayerCollision(Player& player)
 			continue;
 		}
 
-		VECTOR enpo = ene->Comp().pos;
-		const float erc = ene->Comp().radius;
+		VECTOR enpo		= ene->Data().pos;
+		const float erc = ene->Data().radius;
 
-		VECTOR di = VSub(enpo, plpo);
-		di.y = 0.0f;
-		const float dist = VSize(di);
-		const float minDist = prc + erc + Config::Enemy::PUSH_MARGIN;
+		VECTOR di				= VSub(enpo, plpo);
+		di.y					= 0.0f;
+		const float dist		= VSize(di);
+		const float minDist		= prc + erc + Config::Enemy::PUSH_MARGIN;
 
 		if (dist < minDist && dist > 1e-4f)
 		{
@@ -136,19 +143,19 @@ void EnemyManager::ResolvePlayerCollision(Player& player)
 			//敵を押す
 			enpo.x += dir.x * enemyMove;
 			enpo.z += dir.z * enemyMove;
-			ene->Comp().pos = enpo;
+			ene->Data().pos = enpo;
 
 			//プレイヤーを押し返す（敵→プレイヤー方向へ）
 			VECTOR ppos = player.GetPosition();
 			ppos.x -= dir.x * playerMove;
 			ppos.z -= dir.z * playerMove;
 			//プレイヤーも壁で止める
-			ppos = player.GetStage().ResolveWall(ppos, prc, player.Comp().height);
+			ppos = player.GetStage().ResolveWall(ppos, prc, player.Data().height);
 			player.SetPosition(ppos);
 		}
 		else if (dist <= 1e-4f)
 		{
-			ene->Comp().pos.x += minDist;
+			ene->Data().pos.x += minDist;
 		}
 
 	}
@@ -212,7 +219,7 @@ Enemy* EnemyManager::FindNearest(const VECTOR& from, float maxRange) const
 			continue;
 		}
 
-		VECTOR dir = VSub(ene->Comp().pos, from);
+		VECTOR dir = VSub(ene->Data().pos, from);
 		dir.y = 0.0f;
 		const float sq = dir.x * dir.x + dir.z * dir.z;
 		if (sq < bestSq)
@@ -247,4 +254,60 @@ bool EnemyManager::AnyAttackHitsSphere(const VECTOR& center, float radius) const
 		}
 	}
 	return false;
+}
+
+void EnemyManager::ResolveEnemyCollision()
+{
+	//全ての敵の組み合わせを調べる
+	for (size_t i = 0; i < enemies.size(); ++i)
+	{
+		if (enemies[i]->IsDead())
+		{
+			continue;
+		}
+
+		for (size_t k = i + 1; k < enemies.size(); ++k)
+		{
+			if (enemies[k]->IsDead())
+			{
+				continue;
+			}
+
+			auto& a = enemies[i];
+			auto& b = enemies[k];
+
+			VECTOR posA = a->Data().pos;
+			VECTOR posB = b->Data().pos;
+
+			VECTOR diff = VSub(posB, posA);
+			diff.y = 0.0f;
+			const float dist = VSize(diff);
+
+			const float minDist = a->Data().radius + b->Data().radius + Config::Enemy::PUSH_MARGIN;
+
+			if (dist < minDist && dist > 1e-4f)
+			{
+				//重なっている分だけ、お互いを半分ずつ押し戻す
+				const float push = (minDist - dist) * 0.5f;
+				const VECTOR dir = VScale(diff, 1.0f / dist);   //AからBへの方向
+
+				posA.x -= dir.x * push;
+				posA.z -= dir.z * push;
+				posB.x += dir.x * push;
+				posB.z += dir.z * push;
+
+				//壁にめり込まないように補正
+				posA = stage.ResolveWall(posA, a->Data().radius, a->Data().height);
+				posB = stage.ResolveWall(posB, b->Data().radius, b->Data().height);
+
+				a->Data().pos = posA;
+				b->Data().pos = posB;
+			}
+			else if (dist <= 1e-4f)
+			{
+				//完全に重なっている場合、片方を少しずらす
+				b->Data().pos.x += minDist;
+			}
+		}
+	}
 }

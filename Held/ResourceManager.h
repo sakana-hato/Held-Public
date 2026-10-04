@@ -28,8 +28,9 @@ public:
 	int Model(const std::string& id)const;	// 3Dモデル
 	int Image(const std::string& id)const;	// 画像
 	int Sound(const std::string& id)const;	// 音
+	int Sound3D(const std::string& id)const;//3D音
 	int Effect(const std::string& id) const;// エフェクト
-
+	std::string FontName(const std::string& id) const;
 private:
 	/// <summary>
 	/// コンストラクタ
@@ -48,7 +49,12 @@ private:
 
 	//データ管理
 	std::unordered_map<std::string, int> models;
-	std::unordered_map<std::string, int >images;
-	std::unordered_map<std::string, int >sounds;
+	std::unordered_map<std::string, int> images;
+	std::unordered_map<std::string, int> sounds;
+	std::unordered_map<std::string, int> sounds3d;
 	std::unordered_map<std::string, int> effects;
+	
+	
+	std::unordered_map<std::string, std::string> fontNames;
+	std::vector<std::string> fontPaths;
 };

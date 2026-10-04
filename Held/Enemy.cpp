@@ -8,6 +8,8 @@
 #include "EnemyStateId.h"
 #include "EnemyState.h"
 #include "Enemy.h"
+#include "ResourceManager.h"
+#include "SoundManager.h"
 
 namespace
 {
@@ -21,16 +23,53 @@ namespace
 	}
 }
 
-Enemy::Enemy(SharedContext& ctx,Stage& stage, Player& player)
-	:ctx_(ctx)
-	,stage(stage)
+Enemy::Enemy(Stage& stage, Player& player)
+	:Character(stage)
 	,player(player)
 {
+
+	data.radius = Config::Enemy::RADIUS;
+	data.height = Config::Enemy::HEIGHT;
+	data.hp		= Config::Enemy::HP_MAX;
+
 	BuildStates();
 	current = states[static_cast<size_t>(EnemyStateId::Idle)].get();
+
+	const int idleSrc = ResourceManager::Instance().Sound3D("se_enemy_idle");
+	if (idleSrc >= 0)
+	{
+		voiceIdleHandle = DuplicateSoundMem(idleSrc);
+	}
+
+	const int noticeSrc = ResourceManager::Instance().Sound3D("se_enemy_notice");
+	if (noticeSrc >= 0)
+	{
+		voiceNoticeHandle = DuplicateSoundMem(noticeSrc);
+	}
+
+	const int damagedSrc = ResourceManager::Instance().Sound3D("se_enemy_damaged");
+	if (damagedSrc >= 0)
+	{
+		voiceDamagedHandle = DuplicateSoundMem(damagedSrc);
+	}
+
+	const int attackSrc = ResourceManager::Instance().Sound3D("se_enemy_attack");
+	if (attackSrc >= 0)
+	{
+		voiceAttackHandle = DuplicateSoundMem(attackSrc);
+	}
+
+	//待機ボイスの最初の間隔をランダムに決める
+	ResetIdleVoiceTimer();
 }
 
-Enemy::~Enemy() = default;
+Enemy::~Enemy()
+{
+	if (voiceIdleHandle >= 0)    DeleteSoundMem(voiceIdleHandle);
+	if (voiceNoticeHandle >= 0)  DeleteSoundMem(voiceNoticeHandle);
+	if (voiceDamagedHandle >= 0) DeleteSoundMem(voiceDamagedHandle);
+	if (voiceAttackHandle >= 0) DeleteSoundMem(voiceAttackHandle);
+}
 
 void Enemy::SetModel(int handle, float scale)
 {
@@ -85,10 +124,25 @@ void Enemy::Update(float dt)
 
 	if (modelHandle >= 0)
 	{
-		const float yawRad = (comp.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
-		MV1SetPosition(modelHandle, comp.pos);
+		const float yawRad = (data.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
+		MV1SetPosition(modelHandle, data.pos);
 		MV1SetRotationXYZ(modelHandle, VGet(0.0f, yawRad, 0.0f));
 		MV1SetScale(modelHandle, VGet(modelScale, modelScale, modelScale));
+	}
+
+	if (CurrentStateId() == EnemyStateId::Idle)
+	{
+		idleVoiceTimer += dt;
+		if (idleVoiceTimer >= idleVoiceInterval)
+		{
+			SoundManager::Instance().PlaySe3D(voiceIdleHandle, data.pos, Config::Sound::ENEMY_VOICE_RADIUS);
+			ResetIdleVoiceTimer();
+		}
+	}
+	else
+	{
+		//待機以外ではタイマーをリセット
+		idleVoiceTimer = 0.0f;
 	}
 }
 
@@ -96,8 +150,8 @@ void Enemy::Draw()const
 {
 	if (modelHandle >= 0)
 	{
-		MV1SetPosition(modelHandle, comp.pos);
-		const float yawRad = (comp.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
+		MV1SetPosition(modelHandle, data.pos);
+		const float yawRad = (data.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
 		MV1SetRotationXYZ(modelHandle, VGet(0.0f, yawRad, 0.0f));
 		MV1SetScale(modelHandle, VGet(modelScale, modelScale, modelScale));
 
@@ -140,7 +194,7 @@ void Enemy::Draw()const
 			}
 	};
 
-	const VECTOR foot = comp.pos;   //足元中心
+	const VECTOR foot = data.pos;   //足元中心
 	drawGroundCircle(foot, Config::Enemy::DETECT_RANGE, GetColor(80, 160, 255));	//探知円（青）
 	drawGroundCircle(foot, Config::Enemy::ATTACK_RANGE, GetColor(255, 80, 80));		//攻撃範囲（赤）
 	drawGroundCircle(foot, Config::Enemy::STOP_DISTANCE, GetColor(255, 220, 80));	//近づきすぎ距離（黄）
@@ -151,7 +205,7 @@ void Enemy::Draw()const
 void Enemy::DrawHpBar() const
 {
 	//死んでいたら出さない
-	if (comp.IsDead())
+	if (data.IsDead())
 	{
 		return;
 	}
@@ -163,8 +217,8 @@ void Enemy::DrawHpBar() const
 	}
 
 	//頭上のワールド座標（敵の頭より少し上）
-	VECTOR headPos = comp.pos;
-	headPos.y += comp.height + Config::Enemy::HpBar::HEIGHT_OFFSET;
+	VECTOR headPos	 = data.pos;
+	headPos.y		+= data.height + Config::Enemy::HpBar::HEIGHT_OFFSET;
 
 	//ワールド座標→画面座標に変換
 	VECTOR screen = ConvWorldPosToScreenPos(headPos);
@@ -176,7 +230,7 @@ void Enemy::DrawHpBar() const
 	}
 
 	//HPの割合
-	const float rate		= comp.hp / Config::Enemy::HP_MAX;
+	const float rate		= data.hp / Config::Enemy::HP_MAX;
 	const float clampedRate = (rate < 0.0f) ? 0.0f : (rate > 1.0f ? 1.0f : rate);
 
 	//バーのサイズ（画面ピクセル）
@@ -206,7 +260,7 @@ void Enemy::DrawHpBar() const
 
 Capsule Enemy::GetBodyCapsule() const
 {
-	return Capsule{ comp.CapsuleBottom(), comp.CapsuleTop(), comp.radius };
+	return Capsule{ data.CapsuleBottom(), data.CapsuleTop(), data.radius };
 }
 
 Capsule Enemy::GetAttackCapsule() const
@@ -227,16 +281,16 @@ Capsule Enemy::GetAttackCapsule() const
 
 void Enemy::TakeDamage(float amount, const VECTOR& attackerPos)
 {
-	if (comp.IsDead())
+	if (data.IsDead())
 	{
 		return;
 	}
 
-	comp.hp -= amount;
+	data.hp -= amount;
 
-	if (comp.hp <= 0.0f)
+	if (data.hp <= 0.0f)
 	{
-		comp.hp = 0.0f;
+		data.hp = 0.0f;
 		
 		VECTOR launchDir = player.GetForward();
 
@@ -259,7 +313,7 @@ void Enemy::TakeDamage(float amount, const VECTOR& attackerPos)
 	else
 	{
 		//のけぞり方向＝攻撃元→敵（押される向き）
-		VECTOR knock = VSub(comp.pos, attackerPos);
+		VECTOR knock = VSub(data.pos, attackerPos);
 		knock.y = 0.0f;
 		const float len = VSize(knock);
 		if (len > 1e-4f)
@@ -268,7 +322,7 @@ void Enemy::TakeDamage(float amount, const VECTOR& attackerPos)
 		}
 		else
 		{
-			knock = VScale(comp.Forward(), -1.0f);
+			knock = VScale(data.Forward(), -1.0f);
 		}
 
 		//Damaged状態に方向を渡して遷移
@@ -306,81 +360,17 @@ EnemyStateId Enemy::CurrentStateId() const
 	return current ? static_cast<EnemyStateId>(current->Id()) : EnemyStateId::Count;
 }
 
-float Enemy::FloorYAt(const VECTOR& pos) const
-{
-	float y = Config::Graund::GROUND_Y;
-
-	if (stage.GetFloorY(pos, y))
-	{
-		return y;
-	}
-
-	return Config::Graund::GROUND_Y;
-}
-
-void Enemy::ApplyGravity(float dt)
-{
-	comp.vy -= Config::Player::Status::GRAVITY * dt;
-	comp.pos.y += comp.vy * dt;
-
-	const float floorY = FloorYAt(comp.pos);
-	if (comp.pos.y <= floorY)
-	{
-		comp.pos.y = floorY;
-		comp.vy = 0.0f;
-	}
-}
-
-void Enemy::FaceTowardDeg(float targetYawDeg, float dt)
-{
-	float diff = targetYawDeg - comp.facingYawDeg;
-	while (diff > 180.0f)
-	{
-		diff -= 360.0f;
-	}
-
-	while (diff < -180.0f)
-	{
-		diff += 360.0f;
-	}
-
-
-	const float maxStep = Config::Enemy::TURN_SPEED * dt;
-	if (std::fabs(diff) <= maxStep)
-	{
-		comp.facingYawDeg = targetYawDeg;
-	}
-	else
-	{
-		comp.facingYawDeg += (diff > 0.0f) ? maxStep : -maxStep;
-	}
-
-
-	while (comp.facingYawDeg > 180.0f)
-	{
-		comp.facingYawDeg -= 360.0f;
-	}
-
-	while (comp.facingYawDeg < -180.0f)
-	{
-		comp.facingYawDeg += 360.0f;
-	}
-
-}
-
 float Enemy::DistanceToPlayer() const
 {
-	
-
 	const VECTOR plpo = player.GetPosition();
-	const VECTOR dir = VSub(plpo, comp.pos);
+	const VECTOR dir = VSub(plpo, data.pos);
 	return std::sqrt(dir.x * dir.x + dir.z * dir.z);   //水平距離
 }
 
 VECTOR Enemy::DirToPlayer() const
 {
-	VECTOR dir = VSub(player.GetPosition(), comp.pos);
-	dir.y = 0.0f;
+	VECTOR dir		= VSub(player.GetPosition(), data.pos);
+	dir.y			= 0.0f;
 	const float len = VSize(dir);
 
 	if (len > 1e-4f)
@@ -410,7 +400,7 @@ void Enemy::MoveTowardPlayer(float speed, float dt)
 	if (dist <= Config::Enemy::STOP_DISTANCE)
 	{
 		FaceTowardDeg(YawToPlayerDeg(), dt);
-		comp.velocity = VGet(0.0f, 0.0f, 0.0f);
+		data.velocity = VGet(0.0f, 0.0f, 0.0f);
 		return;
 	}
 
@@ -420,15 +410,26 @@ void Enemy::MoveTowardPlayer(float speed, float dt)
 	FaceTowardDeg(DirToYawDeg(dir), dt);
 
 	//前進
-	comp.pos.x += dir.x * speed * dt;
-	comp.pos.z += dir.z * speed * dt;
-	comp.velocity = VScale(dir, speed);
+	data.pos.x += dir.x * speed * dt;
+	data.pos.z += dir.z * speed * dt;
+	data.velocity = VScale(dir, speed);
 
 	//柱・壁にめり込んだら押し戻し
-	comp.pos = stage.ResolveWall(comp.pos, comp.radius, comp.height);
+	data.pos = stage.ResolveWall(data.pos, data.radius, data.height);
 }
 
 void Enemy::PlayAnim(int animModel, int animIndex, bool loop)
 {
 	animator.Play(animModel, animIndex, loop);
+}
+
+void Enemy::ResetIdleVoiceTimer()
+{
+	idleVoiceTimer = 0.0f;
+
+	//最短から最長の間でランダムな間隔を決める
+	const float minI = Config::Sound::ENEMY_IDLE_MIN_INTERVAL;
+	const float maxI = Config::Sound::ENEMY_IDLE_MAX_INTERVAL;
+	const float t = static_cast<float>(GetRand(1000)) / 1000.0f;   //0.0から1.0
+	idleVoiceInterval = minI + (maxI - minI) * t;
 }

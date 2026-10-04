@@ -5,6 +5,7 @@
 #include "EnemyState.h"
 #include "Enemy.h"
 #include "ResourceManager.h"
+#include "SoundManager.h"
 #include "SharedContext.h"
 #include "Player.h"
 
@@ -15,7 +16,7 @@ void EnemyIdle::OnEnter()
 	{
 		enemy.PlayAnim(idle, 0, true);
 	}
-
+	enemy.SetNoticedPlayer(false);
 }
 
 void EnemyIdle::Update(float dt)
@@ -36,6 +37,15 @@ void EnemyChase::OnEnter()
 		enemy.PlayAnim(walk, 0, true);
 	}
 
+	if (!enemy.HasNoticedPlayer())
+	{
+		SoundManager::Instance().PlaySe3D(
+			enemy.GetVoiceNoticeHandle(),
+			enemy.Data().pos,
+			Config::Sound::ENEMY_VOICE_RADIUS);
+
+		enemy.SetNoticedPlayer(true);
+	}
 }
 
 void EnemyChase::Update(float dt)
@@ -75,6 +85,8 @@ void EnemyAttack::OnEnter()
 		enemy.PlayAnim(atk, 0, false);
 	}
 
+	SoundManager::Instance().PlaySe3D(enemy.GetVoiceAttackHandle(),enemy.Data().pos,Config::Sound::ENEMY_VOICE_RADIUS);
+
 }
 
 void EnemyAttack::Update(float dt)
@@ -82,9 +94,7 @@ void EnemyAttack::Update(float dt)
 	timer += dt;
 
 	//攻撃判定の有効時間帯だけ手カプセルをON
-	const bool active =
-		(timer >= Config::Enemy::ATTACK_HIT_START &&
-			timer <= Config::Enemy::ATTACK_HIT_END);
+	const bool active =(timer >= Config::Enemy::ATTACK_HIT_START &&timer <= Config::Enemy::ATTACK_HIT_END);
 	enemy.SetAttackActive(active);
 
 	//プレイヤーへのヒット判定
@@ -94,7 +104,7 @@ void EnemyAttack::Update(float dt)
 		const Capsule body = enemy.GetPlayer().GetBodyCapsule();
 		if (CapsuleMath::Intersect(atk, body))
 		{
-			enemy.GetPlayer().TakeDamage(Config::Enemy::ENEMY_ATTACK_POWER, enemy.Comp().pos);
+			enemy.GetPlayer().TakeDamage(Config::Enemy::ENEMY_ATTACK_POWER, enemy.Data().pos);
 			hitDone = true;
 		}
 	}
@@ -118,14 +128,14 @@ void EnemyDamage::OnEnter()
 	{
 		enemy.PlayAnim(dmg, 0, false);
 	}
-	enemy.Comp().velocity = VScale(knockDir, Config::Enemy::DAMAGED_KNOCKBACK);
+	enemy.Data().velocity = VScale(knockDir, Config::Enemy::DAMAGED_KNOCKBACK);
 }
 
 void EnemyDamage::Update(float dt)
 {
 	timer += dt;
 
-	auto& comp = enemy.Comp();
+	auto& comp = enemy.Data();
 
 	//のけぞり移動
 	const float t = 1.0f - (timer / Config::Enemy::DAMAGED_DURATION);
@@ -163,7 +173,7 @@ void EnemyDead::OnEnter()
 void EnemyDead::Update(float dt)
 {
 	timer += dt;
-	auto& comp = enemy.Comp();
+	auto& comp = enemy.Data();
 
 	//水平に吹き飛ぶ（プレイヤーが向いている方向＝knockDir）
 	comp.pos.x += knockDir.x * Config::Enemy::DEAD_LAUNCH_SPEED * dt;

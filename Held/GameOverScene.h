@@ -12,8 +12,8 @@ public:
     /// コンストラクタ
     /// </summary>
     /// <param name="ctx"></param>共通データ
-    explicit GameOverScene(SharedContext& ctx, InputSystem& input)
-        : Scene(input), ctx_(ctx) {}
+    explicit GameOverScene(InputSystem& input, GameResult& result)
+        : Scene(input,result){}
 
     /// <summary>
     /// デストラクタ
@@ -41,7 +41,7 @@ public:
     /// </summary>
     void Draw()    override;
 private:
-    SharedContext& ctx_; // 共通データ
+    //SharedContext& ctx_; // 共通データ
 
     int   cursorIndex   = 0;            // 0=ゲームに戻る, 1=タイトルへ
     float lockTimer     = 0.0f;         // 入力ロック開始からの経過時間

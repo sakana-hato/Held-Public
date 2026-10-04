@@ -114,6 +114,11 @@ public:
 	/// </summary>
 	VECTOR GetEyePosition() const { return eyePos; }
 
+	/// <summary>
+	/// カメラが見ている位置
+	/// </summary>
+
+	VECTOR GetTargetPosition() const;
 private:
 	/// <summary>
 	/// 三人称カメラの更新

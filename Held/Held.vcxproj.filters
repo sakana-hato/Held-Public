@@ -20,9 +20,6 @@
     <Filter Include="Game\Character\Player">
       <UniqueIdentifier>{101042b0-8482-410c-ae51-847dc07fd973}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game\Character\BaseState">
-      <UniqueIdentifier>{6c1aa95d-a326-4c92-b4f9-0dee00fb57ad}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Game\Anime">
       <UniqueIdentifier>{5d17b66d-beae-4745-8bb3-08b92290edad}</UniqueIdentifier>
     </Filter>
@@ -101,6 +98,15 @@
     </Filter>
     <Filter Include="Game\CutScene\Director">
       <UniqueIdentifier>{eac465dc-b464-446c-93c1-2e7f204672d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Character\Base">
+      <UniqueIdentifier>{6c1aa95d-a326-4c92-b4f9-0dee00fb57ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\UI\HP">
+      <UniqueIdentifier>{debeb534-54f8-4662-a1ec-c1d4b2e3afe5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\UI\PlayerEvent">
+      <UniqueIdentifier>{f4ab14a4-1b25-4bfe-9713-bbe6724ab9f7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -233,12 +239,6 @@
     <ClCompile Include="StunChicks.cpp">
       <Filter>Game\Effect</Filter>
     </ClCompile>
-    <ClCompile Include="PlayerHpUi.cpp">
-      <Filter>Game\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="BossHpUi.cpp">
-      <Filter>Game\UI</Filter>
-    </ClCompile>
     <ClCompile Include="CutsceneDirector.cpp">
       <Filter>Game\CutScene\Director</Filter>
     </ClCompile>
@@ -246,6 +246,21 @@
       <Filter>Game\CutScene\Director</Filter>
     </ClCompile>
     <ClCompile Include="BossDeathDirector.cpp">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClCompile>
+    <ClCompile Include="Character.cpp">
+      <Filter>Game\Character\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BossHpUi.cpp">
+      <Filter>Game\UI\HP</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerHpUi.cpp">
+      <Filter>Game\UI\HP</Filter>
+    </ClCompile>
+    <ClCompile Include="CounterUi.cpp">
+      <Filter>Game\UI\PlayerEvent</Filter>
+    </ClCompile>
+    <ClCompile Include="TitleDirector.cpp">
       <Filter>Game\CutScene\Director</Filter>
     </ClCompile>
   </ItemGroup>
@@ -305,7 +320,7 @@
       <Filter>Game\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="State.h">
-      <Filter>Game\Character\BaseState</Filter>
+      <Filter>Game\Character\Base</Filter>
     </ClInclude>
     <ClInclude Include="Capsule.h">
       <Filter>Game\Character\Capsule</Filter>
@@ -360,9 +375,6 @@
     </ClInclude>
     <ClInclude Include="KatanaTrail.h">
       <Filter>Game\Weapon</Filter>
-    </ClInclude>
-    <ClInclude Include="GameOverScene.h">
-      <Filter>Game\Scene\Result</Filter>
     </ClInclude>
     <ClInclude Include="GameClearScene.h">
       <Filter>Game\Scene\Result</Filter>
@@ -442,21 +454,6 @@
     <ClInclude Include="Fader.h">
       <Filter>Game\CutScene</Filter>
     </ClInclude>
-    <ClInclude Include="HealthChangeEvent.h">
-      <Filter>Game\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="HealthObserver.h">
-      <Filter>Game\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="HealthSubject.h">
-      <Filter>Game\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayerHpUi.h">
-      <Filter>Game\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="BossHpUi.h">
-      <Filter>Game\UI</Filter>
-    </ClInclude>
     <ClInclude Include="CutsceneDirector.h">
       <Filter>Game\CutScene\Director</Filter>
     </ClInclude>
@@ -467,6 +464,48 @@
       <Filter>Game\CutScene\Director</Filter>
     </ClInclude>
     <ClInclude Include="BossDeathDirector.h">
+      <Filter>Game\CutScene\Director</Filter>
+    </ClInclude>
+    <ClInclude Include="GameResult.h">
+      <Filter>Game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOverScene.h">
+      <Filter>Game\Scene\Result</Filter>
+    </ClInclude>
+    <ClInclude Include="Character.h">
+      <Filter>Game\Character\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BossHpUi.h">
+      <Filter>Game\UI\HP</Filter>
+    </ClInclude>
+    <ClInclude Include="HealthChangeEvent.h">
+      <Filter>Game\UI\HP</Filter>
+    </ClInclude>
+    <ClInclude Include="HealthObserver.h">
+      <Filter>Game\UI\HP</Filter>
+    </ClInclude>
+    <ClInclude Include="HealthSubject.h">
+      <Filter>Game\UI\HP</Filter>
+    </ClInclude>
+    <ClInclude Include="UiBase.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerEvent.h">
+      <Filter>Game\UI\PlayerEvent</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerEventObserver.h">
+      <Filter>Game\UI\PlayerEvent</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerEventSubject.h">
+      <Filter>Game\UI\PlayerEvent</Filter>
+    </ClInclude>
+    <ClInclude Include="CounterUi.h">
+      <Filter>Game\UI\PlayerEvent</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerHpUi.h">
+      <Filter>Game\UI\HP</Filter>
+    </ClInclude>
+    <ClInclude Include="TitleDirector.h">
       <Filter>Game\CutScene\Director</Filter>
     </ClInclude>
   </ItemGroup>

@@ -12,6 +12,7 @@
 #include "Boss.h"
 #include "EffectManager.h"
 #include "TargetSystem.h"
+#include "SoundManager.h"
 
 namespace
 {
@@ -33,14 +34,14 @@ namespace
 			Enemy* ene = player.GetEnemies()->FindNearest(player.GetPosition(), range);
 			if (ene)
 			{
-				VECTOR dir = VSub(ene->Comp().pos, player.GetPosition());
-				dir.y = 0.0f;
+				VECTOR dir	= VSub(ene->Data().pos, player.GetPosition());
+				dir.y		= 0.0f;
 				const float dist = VSize(dir);
 				if (dist < bestDist)
 				{
-					bestDist = dist;
-					result = ene->Comp().pos;
-					found = true;
+					bestDist	= dist;
+					result		= ene->Data().pos;
+					found		= true;
 				}
 			}
 		}
@@ -49,14 +50,14 @@ namespace
 		Boss* bos = player.GetBoss();
 		if (bos && bos->IsActive() && bos->IsAlive())
 		{
-			VECTOR dir = VSub(bos->Comp().pos, player.GetPosition());
+			VECTOR dir = VSub(bos->Data().pos, player.GetPosition());
 			dir.y = 0.0f;
 			const float dist = VSize(dir);
 			//ボス用の範囲内で、かつ今の候補より近ければ
 			if (dist <= Config::Player::Attack::ATTACK_HOMING_RANGE_BOSS && dist < bestDist)
 			{
 				bestDist = dist;
-				result = bos->Comp().pos;
+				result = bos->Data().pos;
 				found = true;
 			}
 		}
@@ -85,14 +86,14 @@ bool PlayerState::MoveByInput(float speed, float dt)
 
 void BaseMovement::ResetIdleTrigger()
 {
-	const float range = Config::Player::Idle::IDLE_ACT_WAIT_MAX - Config::Player::Idle::IDLE_ACT_WAIT_MIN;
-	const float rand = static_cast<float>(GetRand(1000)) / 1000.0f;  
-	idleTrigger = Config::Player::Idle::IDLE_ACT_WAIT_MIN + range * rand;
+	const float range	= Config::Player::Idle::IDLE_ACT_WAIT_MAX - Config::Player::Idle::IDLE_ACT_WAIT_MIN;
+	const float rand	= static_cast<float>(GetRand(1000)) / 1000.0f;  
+	idleTrigger			= Config::Player::Idle::IDLE_ACT_WAIT_MIN + range * rand;
 }
 
 void BaseMovement::OnEnter()
 {
-	player.Comp().comboIndex = 0;
+	player.SetComboIndex(0);
 	wasDashMoving	= false;
 	runStopping		= false;
 	runStopTimer	= 0.0f;
@@ -113,28 +114,24 @@ void BaseMovement::PlayIdle()
 void BaseMovement::Update(float dt)
 {
 	auto& in		= player.Input();
-	auto& comp		= player.Comp();
+	auto& data		= player.Data();
 
-	//通常の無敵は無し（ジャスト回避スロー中だけ維持）
-	comp.invincible = player.IsSlowMoActive();
+	//通常の無敵は無し
+	player.SetInvincible(player.IsSlowMoActive());
 
 	if (player.IsDrawingKatana())
 	{
-		
 		return;
 	}
 
 	//アクション遷移
-	if (in.IsPressed(InputAction::Ultimate) && comp.ultGauge >= Config::Player::Ult::ULT_GAUGE_MAX)
+	if (in.IsPressed(InputAction::Ultimate) && player.GetUltGauge() >= Config::Player::Ult::ULT_GAUGE_MAX)
 	{
 		player.ChangeState(PlayerStateId::Ultimate); 
 		return;
 	}
-	if (in.IsPressed(InputAction::Magic))
-	{
-		player.ChangeState(PlayerStateId::Magic); 
-		return;
-	}
+
+	
 	if (in.IsPressed(InputAction::Attack))
 	{
 		if (player.IsKatanaDrawn())       
@@ -146,7 +143,7 @@ void BaseMovement::Update(float dt)
 				return;
 			}
 
-			comp.comboIndex = 0;
+			player.SetComboIndex(0);
 			player.ChangeState(PlayerStateId::Attack);
 			return;
 		}
@@ -158,37 +155,34 @@ void BaseMovement::Update(float dt)
 	}
 	if (in.IsPressed(InputAction::Jump))
 	{
-		comp.vy = Config::Player::Move::PLAYER_JUMP_SPEED;
+		data.vy = Config::Player::Move::PLAYER_JUMP_SPEED;
 		player.ChangeState(PlayerStateId::Jump); 
 		return;
 	}
 
-	const VECTOR dir = player.CalcMoveDirFromInput();
+	const VECTOR dir	= player.CalcMoveDirFromInput();
 	const bool   moving = (VSize(dir) > 0.0f);
 
 	if (in.IsPressed(InputAction::Dash))
 	{
-		comp.dashOn = !comp.dashOn;
+		player.SetDashOn(!player.IsDashOn());
 	}
-	const bool dashing = comp.dashOn;
+	const bool dashing = player.IsDashOn();
 
 	if (runStopping)
 	{
 		//移動入力が入ったらキャンセルして通常移動へ戻す
 		if (moving)
 		{
-			runStopping = false;
-			runStopTimer = 0.0f;
-			idleActing = false;
-			idleTimer = 0.0f;   
+			runStopping		= false;
+			runStopTimer	= 0.0f;
+			idleActing		= false;
+			idleTimer		= 0.0f;   
 		}
 		else
 		{
-			//runstop を流し続ける。終わったら idle 
 			runStopTimer += dt;
-			comp.velocity = VGet(0.0f, 0.0f, 0.0f);
-
-			
+			data.velocity = VGet(0.0f, 0.0f, 0.0f);
 
 			const int runstop = ResourceManager::Instance().Model("anim_runstop");
 			player.PlayAnim(runstop, 0, false, false); 
@@ -207,19 +201,56 @@ void BaseMovement::Update(float dt)
 
 	if (moving)
 	{
-		idleActing = false;
-		idleTimer = 0.0f;
-		const float speed = dashing ? Config::Player::Move::PLAYER_DASH_SPEED : Config::Player::Move::PLAYER_MOVE_SPEED;
-		
+		idleActing			= false;
+		idleTimer			= 0.0f;
+		const float speed	= dashing ? Config::Player::Move::PLAYER_DASH_SPEED : Config::Player::Move::PLAYER_MOVE_SPEED;
 
+		if (player.IsGrounded())
+		{
+			if (dashing)
+			{
+				if (footstepWalkPlaying)
+				{
+					SoundManager::Instance().StopSeLoop(SeId::FootstepWalk);
+					footstepWalkPlaying = false;
+				}
+
+				if (!footstepRunPlaying)
+				{
+					SoundManager::Instance().PlaySeLoop(SeId::FootstepRun, Config::Sound::FOOTSTEP_VOLUME);
+					footstepRunPlaying = true;
+				}
+			}
+			else
+			{
+				
+				if (footstepRunPlaying)
+				{
+					SoundManager::Instance().StopSeLoop(SeId::FootstepRun);
+					footstepRunPlaying = false;
+				}
+
+				if (!footstepWalkPlaying)
+				{
+					SoundManager::Instance().PlaySeLoop(SeId::FootstepWalk, Config::Sound::FOOTSTEP_VOLUME);
+					footstepWalkPlaying = true;
+				}
+			}
+		}
+		else
+		{
+			StopFootsteps();
+		}
+		
+		
 		VECTOR targetPos;
 		const bool locked = player.GetTarget().GetTargetPosition(targetPos);
 
 		if (locked)
 		{
-			//対象を向いたまま入力方向へ移動（雑魚・ボス共通）
-			VECTOR toTarget = VSub(targetPos, comp.pos);
-			toTarget.y = 0.0f;
+			//対象を向いたまま入力方向へ移動
+			VECTOR toTarget = VSub(targetPos, data.pos);
+			toTarget.y		= 0.0f;
 			if (VSize(toTarget) > 1e-4f)
 			{
 				player.FaceTowardDeg(DirToYawDeg(toTarget), dt);
@@ -227,7 +258,7 @@ void BaseMovement::Update(float dt)
 
 			player.ApplyHorizontalMove(dir, speed, dt);
 
-			const float faceYaw = comp.facingYawDeg;
+			const float faceYaw = data.facingYawDeg;
 			const float moveYaw = DirToYawDeg(dir);
 			float diff = moveYaw - faceYaw;
 			while (diff > 180.0f)
@@ -244,7 +275,7 @@ void BaseMovement::Update(float dt)
 			{
 				//前後ろ移動
 				const char* key = dashing ? "anim_run" : "anim_walk";
-				const int mv = ResourceManager::Instance().Model(key);
+				const int mv	= ResourceManager::Instance().Model(key);
 				if (mv >= 0)
 				{
 					player.PlayAnim(mv, 0, true, false);
@@ -285,6 +316,8 @@ void BaseMovement::Update(float dt)
 		}
 		else
 		{
+			
+
 			//通常移動
 			player.FaceTowardDeg(DirToYawDeg(dir), dt);
 			player.ApplyHorizontalMove(dir, speed, dt);
@@ -306,9 +339,11 @@ void BaseMovement::Update(float dt)
 	}
 	else
 	{
-		comp.velocity = VGet(0.0f, 0.0f, 0.0f);
 
-		comp.dashOn = false;
+		StopFootsteps();
+		data.velocity = VGet(0.0f, 0.0f, 0.0f);
+
+		player.SetDashOn(false);
 
 		if (wasDashMoving)
 		{
@@ -322,27 +357,25 @@ void BaseMovement::Update(float dt)
 		}
 		else if (idleActing)
 		{
-			//待機モーション再生中：アニメが最後まで再生されたら通常idleへ
+			//待機モーション再生中
 			if (player.Anim().IsFinished())
 			{
-				idleActing = false;
-				idleTimer = 0.0f;
+				idleActing	= false;
+				idleTimer	= 0.0f;
 				ResetIdleTrigger();
 				PlayIdle();
 			}
 		}
 		else
 		{
-			//通常idle中：無操作時間を計測
+			//無操作時間を計測
 			idleTimer += dt;
 
 			if (idleTimer >= idleTrigger && !player.IsKatanaDrawn())
 			{
-				const int pick = GetRand(Config::Player::Idle::IDLE_ACT_COUNT - 1); 
-				const char* key =
-					(pick == 0) ? "anim_idle2_a" :(pick == 1) ? "anim_idle2_b" : "anim_idle2_c";
-
-				const int act = ResourceManager::Instance().Model(key);
+				const int pick	= GetRand(Config::Player::Idle::IDLE_ACT_COUNT - 1); 
+				const char* key =(pick == 0) ? "anim_idle2_a" :(pick == 1) ? "anim_idle2_b" : "anim_idle2_c";
+				const int act	= ResourceManager::Instance().Model(key);
 				if (act >= 0)
 				{
 					player.PlayAnim(act, 0, false, false);  
@@ -364,21 +397,41 @@ void BaseMovement::Update(float dt)
 	}
 }
 
+void BaseMovement::StopFootsteps()
+{
+	if (footstepWalkPlaying)
+	{
+		SoundManager::Instance().StopSeLoop(SeId::FootstepWalk);
+		footstepWalkPlaying = false;
+	}
+	if (footstepRunPlaying)
+	{
+		SoundManager::Instance().StopSeLoop(SeId::FootstepRun);
+		footstepRunPlaying = false;
+	}
+}
+
+void BaseMovement::OnExit()
+{
+	//他の状態に移るとき、足音を止める
+	StopFootsteps();
+}
 
 void DodgeState::OnEnter()
 {
 	timer			= 0.0f;
-	auto& comp		= player.Comp();
-	comp.invincible	= true;
+	auto& data		= player.Data();
+	player.SetInvincible(true);
+	SoundManager::Instance().PlaySe(SeId::Dodge);
 
 	//回避方向：入力があればその方向、無ければバックステップ
 	VECTOR inputDir = player.CalcMoveDirFromInput();
 
 	if (VSize(inputDir) > 0.0f)
 	{
-		//入力あり： その方向へ突進。向きも変える。走りに繋ぐ
+		//入力あり
 		dir = inputDir;
-		comp.facingYawDeg = DirToYawDeg(dir);   //突進方向を向く
+		data.facingYawDeg = DirToYawDeg(dir);   //突進方向を向く
 		linkToRun = true;
 
 		//共通の回避アニメ
@@ -393,14 +446,14 @@ void DodgeState::OnEnter()
 			const int fx = ResourceManager::Instance().Effect("dodge_wind");
 			if (fx >= 0)
 			{
-				const VECTOR forward = comp.Forward();
-				VECTOR fxPos = comp.pos;
-				fxPos.x += forward.x * Config::Player::Evasion::DODGE_FX_FORWARD;
-				fxPos.z += forward.z * Config::Player::Evasion::DODGE_FX_FORWARD;
-				fxPos.y += Config::Player::Evasion::DODGE_FX_HEIGHT;
+				const VECTOR forward = data.Forward();
+				VECTOR fxPos = data.pos;
+				fxPos.x		+= forward.x * Config::Player::Evasion::DODGE_FX_FORWARD;
+				fxPos.z		+= forward.z * Config::Player::Evasion::DODGE_FX_FORWARD;
+				fxPos.y		+= Config::Player::Evasion::DODGE_FX_HEIGHT;
 
-				const float yaw = comp.facingYawDeg * DX_PI_F / 180.0f;
-				const int inst = EffectManager::Instance().Play(fx, fxPos, Config::Player::Evasion::DODGE_FX_SCALE);
+				const float yaw = data.facingYawDeg * DX_PI_F / 180.0f;
+				const int inst	= EffectManager::Instance().Play(fx, fxPos, Config::Player::Evasion::DODGE_FX_SCALE);
 				EffectManager::Instance().SetRotation(inst, VGet(0.0f, yaw, 0.0f));
 			}
 		}
@@ -408,7 +461,7 @@ void DodgeState::OnEnter()
 	else
 	{
 		//後ろへ回避。向きは変えない
-		dir = VScale(comp.Forward(), -1.0f);
+		dir = VScale(data.Forward(), -1.0f);
 		linkToRun = false;
 
 		//後ろ回避専用アニメ
@@ -416,11 +469,6 @@ void DodgeState::OnEnter()
 		player.PlayAnim(backDodge, 0, false, false);
 		player.Anim().SetSpeed(Config::Player::Evasion::BACK_DODGE_ANIM_SPEED);
 	}
-
-	
-
-	//comp.facingYawDeg = DirToYawDeg(dir);
-
 
 	if (player.IsIncomingAttack())
 	{
@@ -431,7 +479,7 @@ void DodgeState::OnEnter()
 void DodgeState::Update(float dt)
 {
 	timer += dt;
-	auto& comp = player.Comp();
+	auto& data = player.Data();
 
 	const bool dashing = (timer < Config::Player::Evasion::DODGE_DURATION);
 	if (dashing)
@@ -447,29 +495,22 @@ void DodgeState::Update(float dt)
 	//回避の無敵終了（ただしジャスト回避スロー中は維持）
 	if (timer >= Config::Player::Evasion::DODGE_INVINCIBLE && !player.IsSlowMoActive())
 	{
-		comp.invincible = false;
+		player.SetInvincible(false);
 	}
 
 	//だんだん減速しながら移動
-	const float t = timer / Config::Player::Evasion::DODGE_DURATION;
-	const float speed = Config::Player::Evasion::DODGE_SPEED * (1.0f - t);
+	const float t		= timer / Config::Player::Evasion::DODGE_DURATION;
+	const float speed	= Config::Player::Evasion::DODGE_SPEED * (1.0f - t);
 	player.ApplyHorizontalMove(dir, (speed > 0.0f) ? speed : 0.0f, dt);
 
 	if (timer >= Config::Player::Evasion::DODGE_DURATION)
 	{
 		if (linkToRun)
 		{
-			comp.dashOn = true;
+			player.SetDashOn(true);
 			
 		}
 		player.ChangeState(PlayerStateId::BaseMovement);
-		/*
-		* else
-		{
-			player.ChangeState(PlayerStateId::BaseMovement);
-		}
-		*/
-		
 	}
 }
 
@@ -480,77 +521,77 @@ void DodgeState::OnExit()
 
 void CounterDashState::OnEnter()
 {
-	timer = 0.0f;
-	hitDoneCount = 0;
-	hasTarget = false;
+	timer			= 0.0f;
+	hitDoneCount	= 0;
+	hasTarget		= false;
+	player.NotifyCounterUsed();
 
-	auto& comp = player.Comp();
-	auto& ctx = player.Ctx();
+	auto& data = player.Data();
 
-	//無敵にする（演出中は被弾しない）
-	comp.invincible = true;
-	comp.velocity = VGet(0.0f, 0.0f, 0.0f);
+	//無敵にする
+	player.SetInvincible(true);
+	data.velocity = VGet(0.0f, 0.0f, 0.0f);
 
 	//プレイヤーを非表示に
 	player.SetHidden(true);
 
-	//---- 一番近い敵（雑魚＋ボス）を探して targetCenter を決める ----
+	//一番近い敵を探して targetCenter を決める
 	float bestDistSq = Config::Player::Counter::SEARCH_MAX * Config::Player::Counter::SEARCH_MAX;
 
 	if (player.GetEnemies())
 	{
-		Enemy* nearest = player.GetEnemies()->FindNearest(comp.pos, Config::Player::Counter::SEARCH_MAX);
+		Enemy* nearest = player.GetEnemies()->FindNearest(data.pos, Config::Player::Counter::SEARCH_MAX);
 		if (nearest)
 		{
-			const VECTOR ep = nearest->Comp().pos;
-			VECTOR d = VSub(ep, comp.pos); d.y = 0.0f;
-			const float sq = d.x * d.x + d.z * d.z;
+			const VECTOR ep = nearest->Data().pos;
+			VECTOR d		= VSub(ep, data.pos); d.y = 0.0f;
+			const float sq	= d.x * d.x + d.z * d.z;
 			if (sq < bestDistSq)
 			{
-				bestDistSq = sq;
-				targetCenter = ep;
-				hasTarget = true;
+				bestDistSq		= sq;
+				targetCenter	= ep;
+				hasTarget		= true;
 			}
 		}
 	}
 
 	if (player.GetBoss() && player.GetBoss()->IsActive() && player.GetBoss()->IsAlive())
 	{
-		const VECTOR bp = player.GetBoss()->Comp().pos;
-		VECTOR d = VSub(bp, comp.pos); d.y = 0.0f;
-		const float sq = d.x * d.x + d.z * d.z;
+		const VECTOR bp = player.GetBoss()->Data().pos;
+		VECTOR d		= VSub(bp, data.pos); d.y = 0.0f;
+		const float sq	= d.x * d.x + d.z * d.z;
 		if (sq < bestDistSq)
 		{
-			bestDistSq = sq;
-			targetCenter = bp;
-			hasTarget = true;
+			bestDistSq		= sq;
+			targetCenter	= bp;
+			hasTarget		= true;
 		}
 	}
 
 	if (!hasTarget)
 	{
 		//敵がいなければ、その場でエフェクトを出すだけ
-		targetCenter = comp.pos;
+		targetCenter = data.pos;
 	}
 
 	if (hasTarget)
 	{
-		VECTOR toTarget = VSub(targetCenter, comp.pos);
-		toTarget.y = 0.0f;
-		const float d = VSize(toTarget);
+		VECTOR toTarget = VSub(targetCenter, data.pos);
+		toTarget.y		= 0.0f;
+		const float d	= VSize(toTarget);
 
 		if (d > 1e-3f)
 		{
-			VECTOR dir = VScale(toTarget, 1.0f / d);
-			VECTOR newPos = targetCenter;
-			newPos.x = targetCenter.x - dir.x * Config::Player::Counter::FINISH_OFFSET;
-			newPos.z = targetCenter.z - dir.z * Config::Player::Counter::FINISH_OFFSET;
-			newPos.y = player.FloorYAt(newPos);
-			comp.pos = newPos;
+			VECTOR dir		= VScale(toTarget, 1.0f / d);
+			VECTOR newPos	= targetCenter;
+			newPos.x		= targetCenter.x - dir.x * Config::Player::Counter::FINISH_OFFSET;
+			newPos.z		= targetCenter.z - dir.z * Config::Player::Counter::FINISH_OFFSET;
+			newPos.y		= player.FloorYAt(newPos);
+			data.pos		= newPos;
 
 			//向きを敵に向ける
-			const float yawDeg = std::atan2(dir.x, dir.z) * 180.0f / DX_PI_F;
-			comp.facingYawDeg = yawDeg;
+			const float yawDeg	= std::atan2(dir.x, dir.z) * 180.0f / DX_PI_F;
+			data.facingYawDeg	= yawDeg;
 		}
 	}
 
@@ -560,9 +601,9 @@ void CounterDashState::Update(float dt)
 {
 	timer += dt;
 
-	//---- ダメージのタイミング（一定間隔で HIT_COUNT 回）----
-	const float interval = Config::Player::Counter::HIT_INTERVAL;
-	const int   maxHits = Config::Player::Counter::HIT_COUNT;
+	//ダメージのタイミング
+	const float interval	= Config::Player::Counter::HIT_INTERVAL;
+	const int   maxHits		= Config::Player::Counter::HIT_COUNT;
 
 	//timer が interval * (hitDoneCount + 1) を超えたら、次のダメージを入れる
 	while (hitDoneCount < maxHits && timer >= interval * (hitDoneCount + 1))
@@ -571,14 +612,13 @@ void CounterDashState::Update(float dt)
 		hitDoneCount++;
 	}
 
-	//---- 5撃終わって、少しの余韻の後にプレイヤーを敵の近くに出現させる ----
+	//5撃終わって、少しの余韻の後にプレイヤーを敵の近くに出現させる
 	const float endTime = interval * maxHits;
 
 	if (hitDoneCount >= maxHits && timer >= endTime)
 	{
 		//表示に戻す
 		player.SetHidden(false);
-
 		player.ChangeState(PlayerStateId::BaseMovement);
 		return;
 	}
@@ -586,59 +626,18 @@ void CounterDashState::Update(float dt)
 
 void CounterDashState::OnExit()
 {
-	player.Comp().invincible = false;
-	player.SetHidden(false);   //念のため表示に戻す
+	player.SetInvincible(false);
+	player.SetHidden(false);   
 }
 
 
 static void CounterDashState_ApplyRushDamageImpl(Player& player, const VECTOR& center)
 {
-	auto& ctx = player.Ctx();
-	const float radius = Config::Player::Counter::HIT_RADIUS;
-	const float radSq = radius * radius;
+	const float radius	= Config::Player::Counter::HIT_RADIUS;
+	const float radSq	= radius * radius;
 
 	//ダメージ量：通常の攻撃力に HIT_DAMAGE_MUL を掛ける
 	const float damage = player.GetCurrentAttackPower() * Config::Player::Counter::HIT_DAMAGE_MUL;
-
-	//---- 範囲内の雑魚敵にダメージ ----
-	if (player.GetEnemies())
-	{
-		std::vector<Enemy*> list;
-		player.GetEnemies()->AliveEnemyList(list);
-		for (Enemy* e : list)
-		{
-			VECTOR d = VSub(e->Comp().pos, center); d.y = 0.0f;
-			const float sq = d.x * d.x + d.z * d.z;
-			if (sq <= radSq)
-			{
-				e->TakeDamage(damage, center);
-			}
-		}
-	}
-
-	//---- 範囲内ならボスにもダメージ ----
-	Boss* bos = player.GetBoss();
-	if (bos && bos->IsActive() && bos->IsAlive())
-	{
-		VECTOR d = VSub(bos->Comp().pos, center); d.y = 0.0f;
-		const float sq = d.x * d.x + d.z * d.z;
-		if (sq <= radSq)
-		{
-			bos->TakeDamage(damage, center);
-		}
-	}
-}
-
-//CounterDashState のメンバから呼ぶ
-void CounterDashState::ApplyRushDamage()
-{
-	auto& ctx = player.Ctx();
-	const float radius = Config::Player::Counter::HIT_RADIUS;
-	const float radSq = radius * radius;
-	const float damage = player.GetCurrentAttackPower() * Config::Player::Counter::HIT_DAMAGE_MUL;
-
-	const int hitFx			= ResourceManager::Instance().Effect("hit_slash");
-	const float hitScale = Config::Player::Counter::HIT_FX_SCALE;
 
 	//範囲内の雑魚敵にダメージ
 	if (player.GetEnemies())
@@ -647,8 +646,50 @@ void CounterDashState::ApplyRushDamage()
 		player.GetEnemies()->AliveEnemyList(list);
 		for (Enemy* e : list)
 		{
-			VECTOR d = VSub(e->Comp().pos, targetCenter); d.y = 0.0f;
-			const float sq = d.x * d.x + d.z * d.z;
+			VECTOR d		= VSub(e->Data().pos, center); d.y = 0.0f;
+			const float sq	= d.x * d.x + d.z * d.z;
+			if (sq <= radSq)
+			{
+				e->TakeDamage(damage, center);
+			}
+		}
+	}
+
+	//範囲内ならボスにもダメージ
+	Boss* bos = player.GetBoss();
+	if (bos && bos->IsActive() && bos->IsAlive())
+	{
+		VECTOR d = VSub(bos->Data().pos, center); d.y = 0.0f;
+		const float sq = d.x * d.x + d.z * d.z;
+		if (sq <= radSq)
+		{
+			bos->TakeDamage(damage, center);
+		}
+	}
+}
+
+
+void CounterDashState::ApplyRushDamage()
+{
+	const bool isFinish = (hitDoneCount + 1 >= Config::Player::Counter::HIT_COUNT);
+	SoundManager::Instance().PlaySe(isFinish ? SeId::CounterFinish : SeId::CounterRush);
+
+	const float radius	= Config::Player::Counter::HIT_RADIUS;
+	const float radSq	= radius * radius;
+	const float damage	= player.GetCurrentAttackPower() * Config::Player::Counter::HIT_DAMAGE_MUL;
+
+	const int hitFx			= ResourceManager::Instance().Effect("hit_slash");
+	const float hitScale	= Config::Player::Counter::HIT_FX_SCALE;
+
+	//範囲内の雑魚敵にダメージ
+	if (player.GetEnemies())
+	{
+		std::vector<Enemy*> list;
+		player.GetEnemies()->AliveEnemyList(list);
+		for (Enemy* e : list)
+		{
+			VECTOR d		= VSub(e->Data().pos, targetCenter); d.y = 0.0f;
+			const float sq	= d.x * d.x + d.z * d.z;
 			if (sq <= radSq)
 			{
 				e->TakeDamage(damage, targetCenter);
@@ -656,8 +697,8 @@ void CounterDashState::ApplyRushDamage()
 				//ヒットエフェクトを敵の位置で
 				if (hitFx >= 0)
 				{
-					VECTOR hitPos = e->Comp().pos;
-					hitPos.y += 100.0f;   //少し上（腰あたり）に出す
+					VECTOR hitPos	= e->Data().pos;
+					hitPos.y		+= 100.0f;   //少し上（腰あたり）に出す
 					EffectManager::Instance().Play(hitFx, hitPos, hitScale);
 				}
 			}
@@ -668,16 +709,16 @@ void CounterDashState::ApplyRushDamage()
 	Boss* bos = player.GetBoss();
 	if (bos && bos->IsActive() && bos->IsAlive())
 	{
-		VECTOR d = VSub(bos->Comp().pos, targetCenter); d.y = 0.0f;
-		const float sq = d.x * d.x + d.z * d.z;
+		VECTOR d		= VSub(bos->Data().pos, targetCenter); d.y = 0.0f;
+		const float sq	= d.x * d.x + d.z * d.z;
 		if (sq <= radSq)
 		{
 			bos->TakeDamage(damage, targetCenter);
 			//ボスにもヒットエフェクト
 			if (hitFx >= 0)
 			{
-				VECTOR hitPos = bos->Comp().pos;
-				hitPos.y += 100.0f;
+				VECTOR hitPos	= bos->Data().pos;
+				hitPos.y		+= 100.0f;
 				EffectManager::Instance().Play(hitFx, hitPos, hitScale);
 			}
 		}
@@ -700,15 +741,14 @@ void CounterDashState::ApplyRushDamage()
 	}
 }
 
-
-
 void JumpState::OnEnter()
 {
 	const int jump = ResourceManager::Instance().Model("anim_jump");
 	player.PlayAnim(jump, 0, false, false);
+	SoundManager::Instance().PlaySeRandom(SeId::JumpVoice1, 3);
 
-	VECTOR footPos = player.GetPosition();
-	footPos.y = player.FloorYAt(footPos); 
+	VECTOR footPos	= player.GetPosition();
+	footPos.y		= player.FloorYAt(footPos); 
 	EffectManager::Instance().Play(ResourceManager::Instance().Effect("jump_dust"),footPos,Config::Effect::JUMP_DUST_SCALE);
 }
 
@@ -734,23 +774,23 @@ void JumpState::Update(float dt)
 
 void JumpAttackState::OnEnter()
 {
-	landed = false;
-	recovery = 0.0f;
-	rising = true;        
-	riseTimer = 0.0f;
+	landed		= false;
+	recovery	= 0.0f;
+	rising		= true;        
+	riseTimer	= 0.0f;
 	attackTimer = 0.0f;
 	player.NextAttackId();
 
 	//少し上に浮かせる初速（上向き）
-	player.Comp().vy = Config::Player::Attack::JUMP_ATTACK_RISE_SPEED;  
+	player.Data().vy = Config::Player::Attack::JUMP_ATTACK_RISE_SPEED;  
 
-	//吸い付き：近くの敵・ボスの方向を記録
+	//吸い付き
 	homingActive = false;
 	VECTOR targetPos;
 	if (FindHomingTarget(player, Config::Player::Attack::JUMP_ATTACK_HOMING_RANGE, targetPos))
 	{
-		VECTOR to = VSub(targetPos, player.GetPosition());
-		to.y = 0.0f;
+		VECTOR to		= VSub(targetPos, player.GetPosition());
+		to.y			= 0.0f;
 		const float len = VSize(to);
 		if (len > 1e-4f)
 		{
@@ -758,7 +798,6 @@ void JumpAttackState::OnEnter()
 			homingActive = true;
 		}
 	}
-
 
 	//落下攻撃モーション
 	const int anim = ResourceManager::Instance().Model("anim_jump_attack");
@@ -774,32 +813,30 @@ void JumpAttackState::OnEnter()
 
 void JumpAttackState::Update(float dt)
 {
-	auto& comp = player.Comp();
+	auto& data = player.Data();
 	attackTimer += dt;
 
-	const bool inHit =
-		(attackTimer >= Config::Player::Attack::JUMP_ATTACK_HIT_START &&
-			attackTimer <= Config::Player::Attack::JUMP_ATTACK_HIT_END);
+	const bool inHit =(attackTimer >= Config::Player::Attack::JUMP_ATTACK_HIT_START &&attackTimer <= Config::Player::Attack::JUMP_ATTACK_HIT_END);
 	player.SetBladeActive(inHit);
 
 	if (rising)
 	{
 		//上昇フェーズ：少し上に浮く
-		riseTimer += dt;
-		comp.pos.y += comp.vy * dt;
-		comp.vy -= Config::Player::Attack::JUMP_ATTACK_RISE_GRAVITY * dt;   //だんだん減速
+		riseTimer	+= dt;
+		data.pos.y	+= data.vy * dt;
+		data.vy		-= Config::Player::Attack::JUMP_ATTACK_RISE_GRAVITY * dt;   //だんだん減速
 
 		//上昇時間が過ぎたら、落下に転じる
 		if (riseTimer >= Config::Player::Attack::JUMP_ATTACK_RISE_TIME)
 		{
 			rising = false;
-			comp.vy = -Config::Player::Attack::JUMP_ATTACK_FALL_SPEED;   //下向きに切り替え
+			data.vy = -Config::Player::Attack::JUMP_ATTACK_FALL_SPEED;   //下向きに切り替え
 		}
 	}
 	else if (!landed)
 	{
 		//落下フェーズ
-		comp.pos.y += comp.vy * dt;
+		data.pos.y += data.vy * dt;
 
 		if (homingActive)
 		{
@@ -807,8 +844,8 @@ void JumpAttackState::Update(float dt)
 			VECTOR targetPos;
 			if (FindHomingTarget(player, Config::Player::Attack::JUMP_ATTACK_HOMING_RANGE, targetPos))
 			{
-				VECTOR to = VSub(targetPos, comp.pos);
-				to.y = 0.0f;
+				VECTOR to		= VSub(targetPos, data.pos);
+				to.y			= 0.0f;
 				const float len = VSize(to);
 				if (len > 1e-4f)
 				{
@@ -821,25 +858,26 @@ void JumpAttackState::Update(float dt)
 					//移動：距離に応じて速度を変える
 					//補間的に寄る：残り距離の一定割合ずつ詰める
 					const float t = Config::Player::Attack::JUMP_ATTACK_HOMING_LERP;
-					comp.pos.x += (targetPos.x - comp.pos.x) * t * dt;
-					comp.pos.z += (targetPos.z - comp.pos.z) * t * dt;
+					data.pos.x	+= (targetPos.x - data.pos.x) * t * dt;
+					data.pos.z	+= (targetPos.z - data.pos.z) * t * dt;
 				}
 			}
 		}
 
-		const float floorY = player.FloorYAt(comp.pos);
-		if (comp.pos.y <= floorY)
+		const float floorY = player.FloorYAt(data.pos);
+		if (data.pos.y <= floorY)
 		{
-			comp.pos.y = floorY;
-			comp.vy = 0.0f;
+			data.pos.y = floorY;
+			data.vy = 0.0f;
 			landed = true;
 
 			
 			player.SetBladeActive(false);
 			
-			VECTOR landPos = comp.pos;
+			VECTOR landPos = data.pos;
 			landPos.y = floorY+10;   //地面の高さ
 			EffectManager::Instance().Play(ResourceManager::Instance().Effect("jump_landing"),landPos,Config::Effect::JUMP_LANDING_SCALE);
+			SoundManager::Instance().PlaySe(SeId::JumpAttackLand);
 
 		}
 	}
@@ -856,8 +894,8 @@ void JumpAttackState::Update(float dt)
 
 void AttackState::OnEnter()
 {
-	timer = 0.0f;
-	queued = false;
+	timer	= 0.0f;
+	queued	= false;
 	player.NextAttackId();
 
 	//向きの吸い付き
@@ -872,7 +910,7 @@ void AttackState::OnEnter()
 			{
 				const float enemyYaw = std::atan2(to.x, to.z) * 180.0f / DX_PI_F;
 				//強度1なら即座に敵を向く。強度で現在向きと混ぜる。
-				const float cur = player.Comp().facingYawDeg;
+				const float cur = player.Data().facingYawDeg;
 				float diff = enemyYaw - cur;
 				while (diff > 180.0f)
 				{
@@ -883,7 +921,7 @@ void AttackState::OnEnter()
 				{
 					diff += 360.0f;
 				}
-				player.Comp().facingYawDeg = cur + diff * Config::Player::Attack::ATTACK_HOMING_FACE;
+				player.Data().facingYawDeg = cur + diff * Config::Player::Attack::ATTACK_HOMING_FACE;
 			}
 		}
 	}
@@ -898,7 +936,7 @@ void AttackState::OnExit()
 
 void AttackState::PlayAttackAnim()
 {
-	const int idx = player.Comp().comboIndex;  
+	const int idx = player.GetComboIndex();
 	const char* key =(idx == 0) ? "anim_attack1" :(idx == 1) ? "anim_attack2" : "anim_attack3";
 
 	const int anim = ResourceManager::Instance().Model(key);
@@ -907,28 +945,28 @@ void AttackState::PlayAttackAnim()
 		player.PlayAnim(anim, 0, false, false);
 		player.Anim().SetSpeed(Config::Player::Attack::ATTACK_ANIM_SPEED);
 	}
+	SoundManager::Instance().PlaySe(SeId::Attack);
 }
 
 VECTOR AttackState::CalcAttackDir()
 {
-	const VECTOR forward = player.Comp().Forward();
+	const VECTOR forward = player.Data().Forward();
 
 	if (player.GetEnemies())
 	{
-		Enemy* target = player.GetEnemies()->FindNearest(
-			player.GetPosition(), Config::Player::Attack::ATTACK_HOMING_RANGE);
+		Enemy* target = player.GetEnemies()->FindNearest(player.GetPosition(), Config::Player::Attack::ATTACK_HOMING_RANGE);
 		if (target)
 		{
-			VECTOR toEnemy = VSub(target->Comp().pos, player.GetPosition());
-			toEnemy.y = 0.0f;
+			VECTOR toEnemy	= VSub(target->Data().pos, player.GetPosition());
+			toEnemy.y		= 0.0f;
 			const float len = VSize(toEnemy);
 			if (len > 1e-4f)
 			{
 				toEnemy = VScale(toEnemy, 1.0f / len);
 				//正面と敵方向を強度で混ぜる
-				const float t = Config::Player::Attack::ATTACK_HOMING_MOVE;
-				VECTOR mixed = VAdd(VScale(forward, 1.0f - t), VScale(toEnemy, t));
-				const float ml = VSize(mixed);
+				const float t	= Config::Player::Attack::ATTACK_HOMING_MOVE;
+				VECTOR mixed	= VAdd(VScale(forward, 1.0f - t), VScale(toEnemy, t));
+				const float ml	= VSize(mixed);
 				if (ml > 1e-4f)
 				{
 					return VScale(mixed, 1.0f / ml);
@@ -941,25 +979,25 @@ VECTOR AttackState::CalcAttackDir()
 
 void AttackState::Update(float dt)
 {
-	auto& in = player.Input();
-	auto& comp = player.Comp();
+	auto& in		= player.Input();
+	auto& data		= player.Data();
 	timer += dt;
 
-	float hitStart = Config::Player::Attack::ATTACK1_HIT_START;
-	float hitEnd = Config::Player::Attack::ATTACK1_HIT_END;
-	switch (comp.comboIndex)
+	float hitStart	= Config::Player::Attack::ATTACK1_HIT_START;
+	float hitEnd	= Config::Player::Attack::ATTACK1_HIT_END;
+	switch (player.GetComboIndex())
 	{
 	case 0:
-		hitStart = Config::Player::Attack::ATTACK1_HIT_START;
-		hitEnd = Config::Player::Attack::ATTACK1_HIT_END;
+		hitStart	= Config::Player::Attack::ATTACK1_HIT_START;
+		hitEnd		= Config::Player::Attack::ATTACK1_HIT_END;
 		break;
 	case 1:
-		hitStart = Config::Player::Attack::ATTACK2_HIT_START;
-		hitEnd = Config::Player::Attack::ATTACK2_HIT_END;
+		hitStart	= Config::Player::Attack::ATTACK2_HIT_START;
+		hitEnd		= Config::Player::Attack::ATTACK2_HIT_END;
 		break;
 	case 2:
-		hitStart = Config::Player::Attack::ATTACK3_HIT_START;
-		hitEnd = Config::Player::Attack::ATTACK3_HIT_END;
+		hitStart	= Config::Player::Attack::ATTACK3_HIT_START;
+		hitEnd		= Config::Player::Attack::ATTACK3_HIT_END;
 		break;
 	default:
 		break;
@@ -980,10 +1018,10 @@ void AttackState::Update(float dt)
 	//攻撃中の緩やかな前進
 	if (timer <= Config::Player::Attack::ATTACK_STEP_TIME)
 	{
-		const float t = 1.0f - (timer / Config::Player::Attack::ATTACK_STEP_TIME);
-		const float baseSpeed = (Config::Player::Attack::ATTACK_STEP_DISTANCE / Config::Player::Attack::ATTACK_STEP_TIME) * 2.0f;
-		const float speed = baseSpeed * t;
-		const VECTOR dir = CalcAttackDir();
+		const float t			= 1.0f - (timer / Config::Player::Attack::ATTACK_STEP_TIME);
+		const float baseSpeed	= (Config::Player::Attack::ATTACK_STEP_DISTANCE / Config::Player::Attack::ATTACK_STEP_TIME) * 2.0f;
+		const float speed		= baseSpeed * t;
+		const VECTOR dir		= CalcAttackDir();
 		player.ApplyHorizontalMove(dir, speed, dt);
 	}
 
@@ -995,9 +1033,9 @@ void AttackState::Update(float dt)
 
 	if (player.Anim().IsFinished())
 	{
-		if (queued && (player.Comp().comboIndex + 1 < Config::Player::Attack::COMBO_MAX))
+		if (queued && (player.GetComboIndex() + 1 < Config::Player::Attack::COMBO_MAX))
 		{
-			player.Comp().comboIndex++;
+			player.SetComboIndex(player.GetComboIndex() + 1);
 			timer = 0.0f;
 			queued = false;
 			player.NextAttackId();  
@@ -1005,7 +1043,7 @@ void AttackState::Update(float dt)
 		}
 		else
 		{
-			player.Comp().comboIndex = 0;
+			player.SetComboIndex(0);
 			player.ChangeState(PlayerStateId::BaseMovement);
 		}
 	}
@@ -1017,50 +1055,48 @@ void AttackState::Update(float dt)
 void UltimateState::OnEnter()
 {
 	timer						= 0.0f;
-	player.Comp().ultGauge		= 0.0f;   //消費
-	player.Comp().invincible	= true; //演出中は無敵
+	player.SetUltGauge(0.0f);   //消費
+	player.SetInvincible(true); //演出中は無敵
 	// TODO: 必殺技BGM／カメラ演出／炎をまとうエフェクト
 }
 
 void UltimateState::Update(float dt)
 {
 	timer += dt;
-	player.ApplyHorizontalMove(player.Comp().Forward(), Config::Player::Ult::ULTIMATE_RUSH_SPEED, dt);
+	player.ApplyHorizontalMove(player.Data().Forward(), Config::Player::Ult::ULTIMATE_RUSH_SPEED, dt);
 
 	if (timer >= Config::Player::Ult::ULTIMATE_DURATION)
 	{
-		player.Comp().invincible = false;
+		player.SetInvincible(false);
 		player.ChangeState(PlayerStateId::BaseMovement);
 	}
 }
 
 void DamagedState::OnEnter()
 {
-	timer = 0.0f;
-	auto& comp = player.Comp();
-	// TODO: のけぞりアニメ／ヒットストップ／被弾SE
-	const int dmg = ResourceManager::Instance().Model("anim_damaged");
+	timer			= 0.0f;
+	auto& data		= player.Data();
+	const int dmg	= ResourceManager::Instance().Model("anim_damaged");
 	if (dmg >= 0)
 	{
 		player.PlayAnim(dmg, 0, false, false);
 	}
-	comp.velocity = VScale(knockDir, Config::Player::Hit::DAMAGED_KNOCKBACK);
+	data.velocity = VScale(knockDir, Config::Player::Hit::DAMAGED_KNOCKBACK);
 }
 
 void DamagedState::Update(float dt)
 {
 	timer += dt;
-	auto& comp = player.Comp();
+	auto& data = player.Data();
 
 	//のけぞり移動（だんだん減速）
 	const float t = 1.0f - (timer / Config::Player::Hit::DAMAGED_DURATION);   //1→0
 	if (t > 0.0f)
 	{
-		const VECTOR step = VScale(knockDir, Config::Player::Hit::DAMAGED_KNOCKBACK * t);
-		comp.pos.x += step.x * dt;
-		comp.pos.z += step.z * dt;
-		//壁で止める
-		comp.pos = player.GetStage().ResolveWall(comp.pos, comp.radius, comp.height);
+		const VECTOR step	= VScale(knockDir, Config::Player::Hit::DAMAGED_KNOCKBACK * t);
+		data.pos.x			+= step.x * dt;
+		data.pos.z			+= step.z * dt;
+		data.pos			= player.GetStage().ResolveWall(data.pos, data.radius, data.height);//壁で止める
 	}
 
 	//重力
@@ -1071,17 +1107,14 @@ void DamagedState::Update(float dt)
 	{
 		player.ChangeState(PlayerStateId::BaseMovement);
 	}
-
-	
-
 }
 
 void DeadState::OnEnter()
 {
-	animFinished = false;
-	auto& comp = player.Comp();
-	comp.velocity = VGet(0.0f, 0.0f, 0.0f);   //動きを止める
-	comp.invincible = true;                    //死亡後は無敵
+	animFinished	= false;
+	auto& data		= player.Data();
+	data.velocity	= VGet(0.0f, 0.0f, 0.0f);   //動きを止める
+	player.SetInvincible(true);                     //死亡後は無敵
 
 	const int dead = ResourceManager::Instance().Model("anim_dead");
 	if (dead >= 0)

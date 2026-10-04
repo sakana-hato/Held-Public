@@ -1,7 +1,7 @@
 #pragma once
 #include "Director.h"
 
-struct SharedContext;
+
 class CameraSystem;
 class InputSystem;
 class Stage;
@@ -17,8 +17,8 @@ public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
-	explicit CutSceneDirector(SharedContext& ctx, CameraSystem& camera, InputSystem& input,Stage& stage,Player& player,Boss&boss)
-		: ctx_(ctx), camera(camera), input(input),stage(stage),player(player),boss(boss) {}
+	explicit CutSceneDirector(CameraSystem& camera, InputSystem& input,Stage& stage,Player& player,Boss&boss)
+		: camera(camera), input(input),stage(stage),player(player),boss(boss) {}
 
 	/// <summary>
 	/// カットシーンを開始する
@@ -60,7 +60,7 @@ private:
 	/// <param name="next"></param>移行先のフェーズ
 	void EnterPhase(Phase next);
 
-	SharedContext& ctx_;					// 共通データ参照
+
 	CameraSystem& camera;
 	InputSystem& input;
 	Stage& stage;

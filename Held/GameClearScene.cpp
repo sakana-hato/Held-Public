@@ -43,7 +43,7 @@ void GameClearScene::Update(float dt)
     // Œˆ’è
     if (input.IsPressed(InputAction::Confirm))
     {
-        RequestChange(cursorIndex == 0 ? SceneId::Load : SceneId::Title);
+        RequestChange(cursorIndex == 0 ? SceneId::Game : SceneId::Title);
     }
 }
 
@@ -55,7 +55,7 @@ void GameClearScene::Draw()
 
 char GameClearScene::CalcRank() const
 {
-    const float t = ctx_.clearTimeSec;
+    const float t = result.clearTimeSec;
 
     if (t <= Config::Result::RANK_A_SEC) 
     {
@@ -88,8 +88,8 @@ void GameClearScene::DrawClear() const
     SetFontSize(16);
 
     // •b”‚ð•ª‚Æ•b‚É•ª‚¯‚é
-    const int min = static_cast<int>(ctx_.clearTimeSec) / 60;
-    const int sec = static_cast<int>(ctx_.clearTimeSec) % 60;
+    const int min = static_cast<int>(result.clearTimeSec) / 60;
+    const int sec = static_cast<int>(result.clearTimeSec) % 60;
 
     char timeBuf[32];  // ƒ^ƒCƒ€•\Ž¦—p‚Ì•¶Žš—ñ
     sprintf_s(timeBuf, sizeof(timeBuf), "Time : %02d:%02d", min, sec);

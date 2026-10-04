@@ -145,6 +145,8 @@
   <ItemGroup>
     <ClCompile Include="Animator.cpp" />
     <ClCompile Include="BossDeathDirector.cpp" />
+    <ClCompile Include="Character.cpp" />
+    <ClCompile Include="CounterUi.cpp" />
     <ClCompile Include="PlayerAwakenDirector.cpp" />
     <ClCompile Include="BoneAttachment.cpp" />
     <ClCompile Include="Boss.cpp" />
@@ -197,13 +199,17 @@
     <ClCompile Include="StunChicks.cpp" />
     <ClCompile Include="TargetMarker.cpp" />
     <ClCompile Include="TargetSystem.cpp" />
+    <ClCompile Include="TitleDirector.cpp" />
     <ClCompile Include="TitleScene.cpp" />
     <ClCompile Include="WarningCircle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animator.h" />
     <ClInclude Include="BossDeathDirector.h" />
+    <ClInclude Include="Character.h" />
+    <ClInclude Include="CounterUi.h" />
     <ClInclude Include="Director.h" />
+    <ClInclude Include="GameResult.h" />
     <ClInclude Include="PlayerAwakenDirector.h" />
     <ClInclude Include="BoneAttachment.h" />
     <ClInclude Include="Boss.h" />
@@ -257,6 +263,9 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerAura.h" />
     <ClInclude Include="PlayerComponent.h" />
+    <ClInclude Include="PlayerEvent.h" />
+    <ClInclude Include="PlayerEventObserver.h" />
+    <ClInclude Include="PlayerEventSubject.h" />
     <ClInclude Include="PlayerHpUi.h" />
     <ClInclude Include="PlayerState.h" />
     <ClInclude Include="PlayerStateId.h" />
@@ -280,7 +289,9 @@
     <ClInclude Include="StunChicks.h" />
     <ClInclude Include="TargetMarker.h" />
     <ClInclude Include="TargetSystem.h" />
+    <ClInclude Include="TitleDirector.h" />
     <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="UiBase.h" />
     <ClInclude Include="WarningCircle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

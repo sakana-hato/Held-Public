@@ -45,7 +45,7 @@ private:
 	/// <param name="rate"></param>割合
 	unsigned int RateToColor(float rate) const;
 
-	int fontHandle		= -1;		//フォント
+	int   fontHandle	= -1;		//フォント
 	float targetRate	= 1.0f;		//目標のHP割合
 	float displayRate	= 1.0f;		//表示中のHP割合
 	float currentHp		= 0.0f;		//現在HP

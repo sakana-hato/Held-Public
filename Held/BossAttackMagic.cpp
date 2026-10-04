@@ -26,7 +26,7 @@ void BossAttackMagic::OnStart(Boss& boss)
 bool BossAttackMagic::Update(Boss& boss, float dt)
 {
 	timer += dt;
-	auto& comp = boss.Comp();
+	auto& data = boss.Data();
 
 	if (magicCircleInstance >= 0)
 	{
@@ -54,8 +54,8 @@ bool BossAttackMagic::Update(Boss& boss, float dt)
 		if (needMore && withinTime)
 		{
 			VECTOR away = VScale(boss.DirToPlayer(), -1.0f);
-			comp.pos.x += away.x * Config::Boss::Magic::BACK_SPEED * dt;
-			comp.pos.z += away.z * Config::Boss::Magic::BACK_SPEED * dt;
+			data.pos.x += away.x * Config::Boss::Magic::BACK_SPEED * dt;
+			data.pos.z += away.z * Config::Boss::Magic::BACK_SPEED * dt;
 			boss.FaceTowardDeg(boss.YawToPlayerDeg(), dt);
 		}
 		else
@@ -72,7 +72,7 @@ bool BossAttackMagic::Update(Boss& boss, float dt)
 			const int circle = ResourceManager::Instance().Effect("boss_magic_circle");
 			if (circle >= 0)
 			{
-				VECTOR handPos = comp.pos; handPos.y += 150.0f;
+				VECTOR handPos = data.pos; handPos.y += 150.0f;
 				const int leftHand = MV1SearchFrame(boss.ModelHandle(), "mixamorig:LeftHand");
 				if (leftHand >= 0)
 				{
@@ -121,7 +121,7 @@ bool BossAttackMagic::Update(Boss& boss, float dt)
 				}
 				else
 				{
-					pos = comp.pos; pos.y += 150.0f; 
+					pos = data.pos; pos.y += 150.0f;
 				}
 
 				VECTOR dir = boss.DirToPlayer();

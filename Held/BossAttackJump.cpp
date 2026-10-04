@@ -6,6 +6,7 @@
 #include "SharedContext.h"
 #include "Player.h"
 #include "EffectManager.h"
+#include "SoundManager.h"
 #include "CameraSystem.h"
 
 void BossAttackJump::OnStart(Boss& boss)
@@ -24,7 +25,7 @@ void BossAttackJump::OnStart(Boss& boss)
 bool BossAttackJump::Update(Boss& boss, float dt)
 {
 	timer += dt;
-	auto& comp = boss.Comp();
+	auto& data = boss.Data();
 
 	switch (step)
 	{
@@ -33,9 +34,9 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 		const float dist = boss.DistanceToPlayer();
 
 		//行動範囲の縁を計算
-		auto& comp = boss.Comp();
-		const VECTOR arenaCenter = VGet(Config::Boss::ARENA_CENTER_X, comp.pos.y, Config::Boss::ARENA_CENTER_Z);
-		VECTOR fromCenter = VSub(comp.pos, arenaCenter);
+		auto& data = boss.Data();
+		const VECTOR arenaCenter = VGet(Config::Boss::ARENA_CENTER_X, data.pos.y, Config::Boss::ARENA_CENTER_Z);
+		VECTOR fromCenter = VSub(data.pos, arenaCenter);
 		fromCenter.y = 0.0f;
 		const float distFromCenter = VSize(fromCenter);
 
@@ -48,18 +49,18 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 		{
 			//バック継続
 			VECTOR away = VScale(boss.DirToPlayer(), -1.0f);
-			comp.pos.x += away.x * Config::Boss::Jump::BACK_SPEED * dt;
-			comp.pos.z += away.z * Config::Boss::Jump::BACK_SPEED * dt;
+			data.pos.x += away.x * Config::Boss::Jump::BACK_SPEED * dt;
+			data.pos.z += away.z * Config::Boss::Jump::BACK_SPEED * dt;
 
 			//行動範囲の縁で止める
-			VECTOR fc = VSub(comp.pos, arenaCenter);
+			VECTOR fc = VSub(data.pos, arenaCenter);
 			fc.y = 0.0f;
 			const float d = VSize(fc);
 			if (d > Config::Boss::ARENA_RADIUS)
 			{
 				const VECTOR clamped = VScale(VNorm(fc), Config::Boss::ARENA_RADIUS);
-				comp.pos.x = arenaCenter.x + clamped.x;
-				comp.pos.z = arenaCenter.z + clamped.z;
+				data.pos.x = arenaCenter.x + clamped.x;
+				data.pos.z = arenaCenter.z + clamped.z;
 			}
 
 			boss.FaceTowardDeg(boss.YawToPlayerDeg(), dt);
@@ -79,7 +80,10 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 			boss.Warning().Init(landPos, Config::Boss::Jump::LAND_RADIUS, fillTime);
 
 			const int anim = ResourceManager::Instance().Model("boss_attack_jump");
-			if (anim >= 0) boss.PlayAnim(anim, 0, false);
+			if (anim >= 0)
+			{
+				boss.PlayAnim(anim, 0, false);
+			}
 		}
 		break;
 	}
@@ -91,8 +95,8 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 		{
 			step = Step::Jump;
 			timer = 0.0f;
-			startPos = comp.pos;
-			jumpStartY = comp.pos.y;
+			startPos = data.pos;
+			jumpStartY = data.pos.y;
 		}
 		break;
 	}
@@ -102,20 +106,20 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 
 		if (tim < 1.0f)
 		{
-			comp.pos.x = startPos.x + (landPos.x - startPos.x) * tim;
-			comp.pos.z = startPos.z + (landPos.z - startPos.z) * tim;
-			comp.pos.y = jumpStartY + std::sin(tim * DX_PI_F) * Config::Boss::Jump::JUMP_HEIGHT;
+			data.pos.x = startPos.x + (landPos.x - startPos.x) * tim;
+			data.pos.z = startPos.z + (landPos.z - startPos.z) * tim;
+			data.pos.y = jumpStartY + std::sin(tim * DX_PI_F) * Config::Boss::Jump::JUMP_HEIGHT;
 		}
 		else
 		{
 			//着地・範囲判定
-			comp.pos.x = landPos.x;
-			comp.pos.z = landPos.z;
-			comp.pos.y = jumpStartY;
+			data.pos.x = landPos.x;
+			data.pos.z = landPos.z;
+			data.pos.y = jumpStartY;
 
 			//攻撃判定
 				Player& pl = boss.GetPlayer();
-				VECTOR dir = VSub(pl.GetPosition(), comp.pos);
+				VECTOR dir = VSub(pl.GetPosition(), data.pos);
 				dir.y = 0.0f;
 				const float dist = VSize(dir);
 
@@ -124,19 +128,21 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 
 				if (dist <= Config::Boss::Jump::LAND_RADIUS && !playerAirborne)
 				{
-					pl.TakeDamage(Config::Boss::Jump::POWER, comp.pos);
+					pl.TakeDamage(Config::Boss::Jump::POWER, data.pos);
 				}
 			
 
 			//カメラシェイク
 			boss.Camera().AddShake(15.0f);
 
-			VECTOR center = comp.pos;
-			const float groundY = boss.FloorYAt(comp.pos);
+			SoundManager::Instance().PlaySe(SeId::BossJumpLand);
+
+			VECTOR center = data.pos;
+			const float groundY = boss.FloorYAt(data.pos);
 			boss.GetRockRing().Trigger(center, Config::Boss::Jump::LAND_RADIUS, groundY);
 
-			VECTOR slamPos = comp.pos;
-			slamPos.y = boss.FloorYAt(comp.pos);   
+			VECTOR slamPos = data.pos;
+			slamPos.y = boss.FloorYAt(data.pos);
 			slamPos.y = slamPos.y + 10;
 			EffectManager::Instance().Play(ResourceManager::Instance().Effect("boss_slam"),slamPos,Config::Effect::BOSS_SLAM_SCALE);
 
@@ -150,7 +156,7 @@ bool BossAttackJump::Update(Boss& boss, float dt)
 		return false;
 	}
 		
-	}
+    }
 
 	return true;
 }
@@ -162,11 +168,6 @@ void BossAttackJump::OnEnd(Boss& boss)
 
 bool BossAttackJump::IsUsable(const Boss& boss) const
 {
-	/*
-	* const float dist = boss.DistanceToPlayer();
-	return dist >= Config::Boss::ATTACK_RANGE;  
-	*/
-
 	return true;
 }
 
@@ -183,7 +184,6 @@ bool BossAttackJump::IsJustDodgeWindow(const Boss& boss) const
 		return false;
 	}
 
-
 	//プレイヤーが着地範囲内にいるときだけ受付
 	{
 		VECTOR d = VSub(boss.GetPlayer().GetPosition(), landPos);
@@ -191,6 +191,5 @@ bool BossAttackJump::IsJustDodgeWindow(const Boss& boss) const
 		return VSize(d) <= Config::Boss::Jump::LAND_RADIUS;
 	}
 	
-
 	return false;
 }

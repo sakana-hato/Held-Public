@@ -1,7 +1,7 @@
 #pragma once
 #include "Director.h"
 
-struct SharedContext;
+
 class Boss;
 class CameraSystem;
 class Player;
@@ -9,8 +9,8 @@ class Player;
 class BossDeathDirector :public Director
 {
 public:
-	explicit BossDeathDirector(SharedContext&ctx, CameraSystem& camera,Player& player,Boss&boss)
-		:ctx_(ctx), camera(camera), player(player),boss(boss) {}
+	explicit BossDeathDirector(CameraSystem& camera,Player& player,Boss&boss)
+		:camera(camera), player(player),boss(boss) {}
 
 	void Start();
 
@@ -34,7 +34,7 @@ private:
 	/// </summary>
 	void SetupDeathCamera();
 
-	SharedContext& ctx_;
+	
 	CameraSystem& camera;
 	Player& player;
 	Boss& boss;

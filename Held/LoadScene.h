@@ -1,6 +1,6 @@
 #pragma once
 #include "Scene.h"
-#include "SharedContext.h"
+
 
 /// <summary>
 /// ロードシーン処理（非同期処理）
@@ -12,8 +12,8 @@ public:
 	/// コンストラクタ
 	/// </summary>
 	/// <param name="ctx"></param>共通データ
-	explicit LoadScene(SharedContext& ctx, InputSystem& input)
-		: Scene(input), ctx_(ctx){}
+	explicit LoadScene( InputSystem& input, GameResult& result)
+		: Scene(input,result){}
 
 	/// <summary>
 	/// デストラクタ
@@ -42,8 +42,6 @@ public:
 	void Draw()				override;
 
 private:
-	//共通データ
-	SharedContext& ctx_;
 
 	int  progressDummy = 0;   //進捗の仮表示用
 

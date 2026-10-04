@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Boss.h"
 #include "ResourceManager.h"
+#include "SoundManager.h"
 #include "SharedContext.h"
 #include "Player.h"
 #include "EffectManager.h"
@@ -15,13 +16,14 @@ void BossAttackCharge::OnStart(Boss& boss)
 	orbitProgress = 0.0f;
 	afterImages_.clear();
 	afterImageTimer = 0.0f;
+	dashSePlayed = false;
 	boss.SetHitPlayer(false);
 
 	//外周の中心＝アリーナ中心
-	orbitCenter = VGet(Config::Boss::ARENA_CENTER_X, boss.Comp().pos.y, Config::Boss::ARENA_CENTER_Z);
+	orbitCenter = VGet(Config::Boss::ARENA_CENTER_X, boss.Data().pos.y, Config::Boss::ARENA_CENTER_Z);
 
 	//今のボス位置から、外周上の開始角度を決める
-	VECTOR toBoss = VSub(boss.Comp().pos, orbitCenter);
+	VECTOR toBoss = VSub(boss.Data().pos, orbitCenter);
 	orbitAngle = atan2f(toBoss.z, toBoss.x);
 
 	//走りアニメ
@@ -31,8 +33,8 @@ void BossAttackCharge::OnStart(Boss& boss)
 		boss.PlayAnim(run, 0, true);
 	}
 
-	const float yaw = boss.Comp().facingYawDeg * DX_PI_F / 180.0f;
-	VECTOR effectPos = boss.Comp().pos;
+	const float yaw = boss.Data().facingYawDeg * DX_PI_F / 180.0f;
+	VECTOR effectPos = boss.Data().pos;
 	effectPos.y += Config::Boss::Charge::WIND_EFFECT_Y;
 	chargeEffectInstance = EffectManager::Instance().Play(ResourceManager::Instance().Effect("charge_wind"),effectPos,Config::Effect::CHARGE_WIND_SCALE,VGet(0.0f, yaw, 0.0f));
 }
@@ -40,7 +42,7 @@ void BossAttackCharge::OnStart(Boss& boss)
 bool BossAttackCharge::Update(Boss& boss, float dt)
 {
 	timer += dt;
-	auto& comp = boss.Comp();
+	auto& comp = boss.Data();
 
 	//残像を一定間隔で記録
 	afterImageTimer -= dt;
@@ -111,6 +113,12 @@ bool BossAttackCharge::Update(Boss& boss, float dt)
 		VECTOR fromCenter = VSub(comp.pos, orbitCenter);
 		fromCenter.y = 0.0f;
 		const float distFromCenter = VSize(fromCenter);
+
+		if (!dashSePlayed)
+		{
+			SoundManager::Instance().PlaySeLoop(SeId::BossCharge);
+			dashSePlayed = true;
+		}
 
 		if (distFromCenter > 1e-4f)
 		{
@@ -202,6 +210,8 @@ bool BossAttackCharge::Update(Boss& boss, float dt)
 		comp.pos.x += dashDir.x * Config::Boss::Charge::DASH_SPEED * dt;
 		comp.pos.z += dashDir.z * Config::Boss::Charge::DASH_SPEED * dt;
 
+		
+
 		const float dashYaw = atan2f(dashDir.x, dashDir.z) * 180.0f / DX_PI_F;
 		boss.FaceTowardDeg(dashYaw, dt * 10.0f);
 		boss.SetAttackActive(true);
@@ -245,6 +255,12 @@ bool BossAttackCharge::Update(Boss& boss, float dt)
 	}
 	case Step::Done:
 		boss.SetAttackActive(false);
+
+		if (dashSePlayed)
+		{
+			SoundManager::Instance().StopSeLoop(SeId::BossCharge);
+			dashSePlayed = false;
+		}
 		return false;
 	}
 

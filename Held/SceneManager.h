@@ -1,8 +1,8 @@
 #pragma once
 #include "Precompiled.h"
 #include "Scene.h"    
-#include "SharedContext.h"
 #include "InputSystem.h"
+#include "GameResult.h"
 
 /// <summary>
 /// シーン管理クラス
@@ -38,8 +38,8 @@ public:
 private:
 	std::unique_ptr<Scene>	current;					// 現在動いているシーンの保持
 	SceneId					currentId = SceneId::Title;	// 現在シーンIdの記録 最初はタイトル
-	SharedContext			ctx;						// 共有データ
-	InputSystem input;
+	GameResult				result;
+	InputSystem				input;
 
 	/// <summary>
 	/// 指定されたシーンIdからシーンを生成する

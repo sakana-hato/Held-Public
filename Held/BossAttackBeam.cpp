@@ -24,7 +24,7 @@ void BossAttackBeam::OnStart(Boss& boss)
 bool BossAttackBeam::Update(Boss& boss, float dt)
 {
 	timer += dt;
-	auto& comp = boss.Comp();
+	auto& data = boss.Data();
 
 	switch (step)
 	{
@@ -38,8 +38,8 @@ bool BossAttackBeam::Update(Boss& boss, float dt)
 		if (needMore && withinTime)
 		{
 			VECTOR away = VScale(boss.DirToPlayer(), -1.0f);
-			comp.pos.x += away.x * Config::Boss::Beam::BACK_SPEED * dt;
-			comp.pos.z += away.z * Config::Boss::Beam::BACK_SPEED * dt;
+			data.pos.x += away.x * Config::Boss::Beam::BACK_SPEED * dt;
+			data.pos.z += away.z * Config::Boss::Beam::BACK_SPEED * dt;
 			boss.FaceTowardDeg(boss.YawToPlayerDeg(), dt);
 		}
 		else
@@ -50,7 +50,10 @@ bool BossAttackBeam::Update(Boss& boss, float dt)
 			boss.FaceTowardDeg(boss.YawToPlayerDeg(), dt);
 
 			const int anim = ResourceManager::Instance().Model("boss_beam");  
-			if (anim >= 0) boss.PlayAnim(anim, 0, false);
+			if (anim >= 0)
+			{
+				boss.PlayAnim(anim, 0, false);
+			}
 		}
 		break;
 	}
@@ -60,8 +63,8 @@ bool BossAttackBeam::Update(Boss& boss, float dt)
 		//ためる間、プレイヤーの方を向き続ける
 		boss.FaceTowardDeg(boss.YawToPlayerDeg(), dt);
 
-		VECTOR dir = boss.Comp().Forward();
-		predictStart = boss.Comp().pos;
+		VECTOR dir = boss.Data().Forward();
+		predictStart = boss.Data().pos;
 		predictStart.y += 100.0f;
 		predictEnd = VAdd(predictStart, VScale(dir, Config::Boss::Beam::LENGTH));
 
@@ -72,8 +75,8 @@ bool BossAttackBeam::Update(Boss& boss, float dt)
 			timer = 0.0f;
 
 			//発射方向を固定してカプセルを作る
-			fireDir = boss.Comp().Forward();
-			beamStart = boss.Comp().pos;
+			fireDir = boss.Data().Forward();
+			beamStart = boss.Data().pos;
 			beamStart.y += 100.0f;
 			beamEnd = VAdd(beamStart, VScale(fireDir, Config::Boss::Beam::LENGTH));
 
@@ -81,11 +84,7 @@ bool BossAttackBeam::Update(Boss& boss, float dt)
 			
 
 			const float yaw = atan2f(fireDir.x, fireDir.z) + DX_PI_F;
-			beamEffectInstance = EffectManager::Instance().Play(
-				ResourceManager::Instance().Effect("boss_beam"),
-				beamStart,
-				Config::Effect::BEAM_SCALE,
-				VGet(0.0f, yaw, 0.0f));
+			beamEffectInstance = EffectManager::Instance().Play(ResourceManager::Instance().Effect("boss_beam"),beamStart,Config::Effect::BEAM_SCALE,VGet(0.0f, yaw, 0.0f));
 		}
 		break;
 	}
@@ -102,7 +101,10 @@ bool BossAttackBeam::Update(Boss& boss, float dt)
 			//大剣の向き（刃の根元→先端の方向）
 			VECTOR bladeDir = VSub(blade.p1, blade.p0);
 			const float len = VSize(bladeDir);
-			if (len > 1e-4f) bladeDir = VScale(bladeDir, 1.0f / len);
+			if (len > 1e-4f)
+			{
+				bladeDir = VScale(bladeDir, 1.0f / len);
+			}
 			const float yaw = atan2f(bladeDir.x, bladeDir.z);
 			const float pitch = -asinf(bladeDir.y);   //上下の傾き
 

@@ -1,11 +1,10 @@
 ﻿#pragma once
 #include "Scene.h"
-#include "SharedContext.h"
 #include "CameraSystem.h"
 #include "InputSystem.h"
 #include "TargetSystem.h"
 #include "ProjectileManager.h"
-
+#include "Difficulty.h"
 #include "Player.h"
 #include "Stage.h"
 #include "LightSystem.h"
@@ -21,6 +20,7 @@
 #include "PlayerHpUi.h"
 #include "BossHpUI.h"
 #include "BossDeathDirector.h"
+#include "CounterUi.h"
 
 /// <summary>
 /// ゲームオーバ処理
@@ -44,8 +44,8 @@ public:
     /// コンストラクタ
     /// </summary>
     /// <param name="ctx"></param>共通データ
-    explicit GameScene(SharedContext& ctx, InputSystem& input) 
-        : Scene(input), ctx_(ctx) {}
+    explicit GameScene(InputSystem& input, GameResult& result)
+        : Scene(input, result){}
 
     /// <summary>
     /// デストラクタ
@@ -83,7 +83,7 @@ private:
     void UpdateGameOverSequence(float dt);
 
     
-    SharedContext& ctx_;//共通データ
+    //SharedContext& ctx_;//共通データ
 
     std::unique_ptr<Player> player;
 
@@ -104,16 +104,19 @@ private:
     PostEffect              post;
     TargetMarker            targetMarker;
     TargetSystem            target;
-    //CutSceneDirector        cutscene{ ctx_, camera,input, stage, *player };
     GameOverPhase           gameOverPhase = GameOverPhase::None;
     PlayerAwakenDirector    awaken;
     PlayerAura              playerAura;
     PlayerHpUI              playerHpBar;
     BossHpBarUI             bossHpBar;
     ProjectileManager       projectiles;
-   // BossDeathDirector       bossDeath{ ctx_, camera };
+    CounterUi               counterUi;
+    Difficulty difficulty = Difficulty::Normal;
+
+    int doorBarrierInstance = -1;       //扉バリアエフェクトのインスタンス
 
     float combatEndTimer    = 0.0f;     //戦闘終了からの経過
+    float bgmCombatTimer    = 0.0f;     //戦闘終了からの経過
     float hitStopTimer      = 0.0f;     //hitstopの時間
     float fadeAlpha         = 0.0f;     //暗転の濃さ（0から1）
     float elapsedSec        = 0.0f;     //ゲーム開始からの経過時間
@@ -126,4 +129,5 @@ private:
     bool drawCollisionDebug     = false; //Hキーでコリジョン表示
     bool awakenTriggered        = false;
     bool bossBarStarted         = false;
+
 };

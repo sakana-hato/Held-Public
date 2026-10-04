@@ -11,7 +11,7 @@ void  BossIntroState::OnEnter()
 	timer = 0.0f;
 	finished = false;
 
-	auto& comp = boss.Comp();
+	auto& comp = boss.Data();
 
 	goalY = boss.FloorYAt(comp.pos);
 	
@@ -41,7 +41,7 @@ void BossIntroState::Update(float dt)
 {
 	timer += dt;
 
-	auto& comp = boss.Comp();
+	auto& comp = boss.Data();
 
 	//–‚–@w‚ªL‚ª‚é‚Ì‚ğ‘Ò‚Â
 	if (timer < Config::Boss::INTRO_DELAY)
@@ -218,7 +218,7 @@ void BossDrawSwordState::Update(float dt)
 	if (timer < Config::Boss::DrawSword::PUSH_TIME)
 	{
 		Player& pl = boss.GetPlayer();
-		VECTOR toPlayer = VSub(pl.GetPosition(), boss.Comp().pos);
+		VECTOR toPlayer = VSub(pl.GetPosition(), boss.Data().pos);
 		toPlayer.y = 0.0f;
 		const float dist = VSize(toPlayer);
 
@@ -279,7 +279,7 @@ void BossDamageState::OnEnter()
 void BossDamageState::Update(float dt)
 {
 	timer += dt;
-	auto& comp = boss.Comp();
+	auto& comp = boss.Data();
 
 	//‚Ì‚¯‚¼‚èˆÚ“®iŒy‚­Œã‘Şj
 	comp.pos.x += knockDir.x * 200.0f * dt;

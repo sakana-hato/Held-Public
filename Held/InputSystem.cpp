@@ -75,8 +75,7 @@ float InputSystem::GetCamY() const
 
 bool InputSystem::IsPadConnected() const
 {
-    // パッドが返す値が全部 0 なら未接続
     XINPUT_STATE state = {};
-    GetJoypadXInputState(DX_INPUT_PAD1, &state);
-    return (state.Buttons != 0 ||state.ThumbLX != 0 || state.ThumbLY != 0 ||state.ThumbRX != 0 || state.ThumbRY != 0);
+    const int ret = GetJoypadXInputState(DX_INPUT_PAD1, &state); //戻り値が 0 なら接続、-1 なら未接続
+    return (ret == 0);
 }

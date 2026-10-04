@@ -359,6 +359,13 @@ float CameraSystem::GetCamAxisY() const
 	return (std::fabs(axisY) > DEAD) ? axisY : 0.0f;
 }
 
+VECTOR CameraSystem::GetTargetPosition() const
+{
+	//カットシーン中は専用の注視点、それ以外は通常の注視対象
+	return lastTargetPos; 
+	//return (mode == CameraMode::Cutscene) ? cutsceneTarget : lastTargetPos;
+}
+
 #if defined(_DEBUG)
 void CameraSystem::MoveDebugCamera(float dt)
 {

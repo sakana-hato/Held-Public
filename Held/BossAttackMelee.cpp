@@ -2,6 +2,7 @@
 #include "Boss.h"
 #include "Config.h"
 #include "ResourceManager.h"
+#include "SoundManager.h"
 #include "BossAttackMelee.h"
 
 void BossAttackMelee::OnStart(Boss& boss)
@@ -9,7 +10,7 @@ void BossAttackMelee::OnStart(Boss& boss)
 	timer_ = 0.0f;
 
 	//プレイヤーの方を向く
-	boss.Comp().facingYawDeg = boss.YawToPlayerDeg();
+	boss.Data().facingYawDeg = boss.YawToPlayerDeg();
 	boss.SetHitPlayer(false);
 
 	int atk = -1;
@@ -17,10 +18,12 @@ void BossAttackMelee::OnStart(Boss& boss)
 	if (boss.IsSwordDrawn())
 	{
 		atk = ResourceManager::Instance().Model("boss_attack_sword");   //大剣用
+		SoundManager::Instance().PlaySe(SeId::BossSword);
 	}
 	else
 	{
 		atk = ResourceManager::Instance().Model("boss_attack1");         //素手用
+		SoundManager::Instance().PlaySe(SeId::BossPunch);
 	}
 	if (atk >= 0)
 	{

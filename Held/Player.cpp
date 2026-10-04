@@ -13,15 +13,21 @@
 #include "Enemy.h"
 #include "EnemyManager.h"
 #include "EffectManager.h"
+#include "SoundManager.h"
 
-
-Player::Player(SharedContext& ctx, CameraSystem& camera, InputSystem& input, Stage& stage, TargetSystem& target)
-	: ctx_(ctx)
+Player::Player(CameraSystem& camera, InputSystem& input, Stage& stage, TargetSystem& target, Difficulty difficulty)
+	: Character(stage)         
 	, camera(camera)
 	, input(input)
-	, stage(stage)
 	, target(target)
+	, difficulty(difficulty)   
 {
+	data.pos			= VGet(0.0f, Config::Graund::GROUND_Y, -900.0f);
+	data.facingYawDeg	= 180.0f;
+	data.radius			= Config::Player::Hit::PLAYER_RADIUS;
+	data.height			= Config::Player::Hit::PLAYER_HEIGHT;
+	data.hp				= Config::Player::Status::PLAYER_HP_MAX;
+
 	BuildStates();
 
 	current = states[static_cast<size_t>(PlayerStateId::BaseMovement)].get();
@@ -35,18 +41,18 @@ Player::~Player() = default;
 
 void Player::SetModel(int handle, float scale)
 {
-	modelHandle = handle;
-	modelScale = scale;
+	modelHandle		= handle;
+	modelScale		= scale;
 	animator.SetModel(handle);
 
-	rimVS_ = LoadVertexShader("Shader/PlayerrimVS.vso");
-	rimPS_ = LoadPixelShader("Shader/PlayerrimPS.pso");
+	rimVS_ = LoadVertexShader	("Shader/PlayerrimVS.vso");
+	rimPS_ = LoadPixelShader	("Shader/PlayerrimPS.pso");
 	rimCB_ = CreateShaderConstantBuffer(sizeof(float) * 8);
 }
 
 void Player::SetKatana(int handle)
 {
-	katana.Init(handle);
+	katana.		Init(handle);
 	katanaTrail.Init(15);
 	katanaTrail.LoadShader();
 	if (modelHandle >= 0)
@@ -63,14 +69,13 @@ void Player::SetSheath(int handle)
 	sheath.SetScale(Config::Katana::MODEL_SCALE);   
 
 	//鞘の腰オフセット（刀と同じ位置に置くなら刀の腰オフセットと同じ値）
-	MATRIX rot = MMult(MMult(MGetRotX(Config::Sheath::WAIST_PITCH_RAD),MGetRotY(Config::Sheath::WAIST_YAW_RAD)),MGetRotZ(Config::Sheath::WAIST_ROLL_RAD));
-	MATRIX tr = MGetTranslate(VGet(Config::Sheath::WAIST_OFFSET_X,Config::Sheath::WAIST_OFFSET_Y,Config::Sheath::WAIST_OFFSET_Z));
+	MATRIX rot	= MMult(MMult(MGetRotX(Config::Sheath::WAIST_PITCH_RAD),MGetRotY(Config::Sheath::WAIST_YAW_RAD)),MGetRotZ(Config::Sheath::WAIST_ROLL_RAD));
+	MATRIX tr	= MGetTranslate(VGet(Config::Sheath::WAIST_OFFSET_X,Config::Sheath::WAIST_OFFSET_Y,Config::Sheath::WAIST_OFFSET_Z));
 	sheath.SetOffset(MMult(rot, tr));
 }
 
 void Player::PlayAnim(int animModel, int animIndex, bool loop, bool useRootMotion)
 {
-
 	animator.Play(animModel, animIndex, loop);
 	animator.SetSpeed(1.0f);
 }
@@ -121,28 +126,10 @@ void Player::Update(float dt,float rawDt)
 	}
 	
 	animator.Update(dt);
+	UpdateKatanaSwitch(dt);
 
 	
-
-	if (drawingKatana)
-	{
-		drawTimer += dt;
-		if (drawTimer >= Config::Katana::DRAW_SWITCH_TIME)
-		{
-			katana.Unsheathe();   //このタイミングで腰→手へ
-			drawingKatana = false;
-		}
-	}
-
-	if (sheathingKatana)
-	{
-		sheatheTimer += dt;
-		if (sheatheTimer >= Config::Katana::SHEATHE_SWITCH_TIME)
-		{
-			katana.Sheathe();  
-			sheathingKatana= false;
-		}
-	}
+	
 
 	if (IsBladeActive())
 	{
@@ -164,8 +151,8 @@ void Player::Update(float dt,float rawDt)
 
 	if (modelHandle >= 0)
 	{
-		const float yawRad = (comp.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
-		MV1SetPosition(modelHandle, comp.pos);
+		const float yawRad = (Data().facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
+		MV1SetPosition(modelHandle, Data().pos);
 		MV1SetRotationXYZ(modelHandle, VGet(0.0f, yawRad, 0.0f));
 		MV1SetScale(modelHandle, VGet(modelScale, modelScale, modelScale));
 	}
@@ -176,13 +163,13 @@ void Player::Update(float dt,float rawDt)
 		Enemy* t = target.GetTarget();
 		if (t)
 		{
-			VECTOR toTarget = VSub(t->Comp().pos, comp.pos);
+			VECTOR toTarget = VSub(t->Data().pos, Data().pos);
 			toTarget.y = 0.0f;
 			if (VSize(toTarget) > 1e-4f)
 			{
 				const float targetYaw = std::atan2(toTarget.x, toTarget.z) * 180.0f / DX_PI_F;
-				//徐々に向く（急に向くと不自然なら補間）
-				comp.facingYawDeg = targetYaw;   //または FaceTowardDeg で補間
+				//徐々に向く
+				Data().facingYawDeg = targetYaw;   //または FaceTowardDeg で補間
 			}
 		}
 	}
@@ -191,20 +178,17 @@ void Player::Update(float dt,float rawDt)
 
 	const int waist = MV1SearchFrame(modelHandle, "mixamorig:Hips");
 	sheath.Update(modelHandle, waist);
-	//ApplyRootMotion();   
 }
 
 void Player::UpdatePassive(float dt)
 {
-	
-
 	//HP回復(簡)
-	if (DifficultyParam::HasHpRegen(ctx_.difficulty) && comp.hp > 0.0f)
+	if (DifficultyParam::HasHpRegen(difficulty) && Data().hp > 0.0f)
 	{
-		comp.hp = std::min(comp.hp + Config::Player::Status::PLAYER_HP_REGEN, Config::Player::Status::PLAYER_HP_MAX);
+		Data().hp = std::min(Data().hp + Config::Player::Status::PLAYER_HP_REGEN, Config::Player::Status::PLAYER_HP_MAX);
 	}
 
-	const float regen = comp.enhanced ? Config::Player::Ult::ULT_GAUGE_REGEN_ENHANCED : Config::Player::Ult::ULT_GAUGE_REGEN;
+	const float regen = enhanced ? Config::Player::Ult::ULT_GAUGE_REGEN_ENHANCED : Config::Player::Ult::ULT_GAUGE_REGEN;
 	AddUltGauge(regen * dt);
 
 	//スロータイム
@@ -214,7 +198,8 @@ void Player::UpdatePassive(float dt)
 		if (slowMoTimer <= 0.0f)
 		{
 			slowMoTimer = 0.0f;
-			comp.invincible = false;
+			invincible = false;
+			events.Notify(PlayerEvent::SlowMoEnd);
 		}
 	}
 }
@@ -228,7 +213,6 @@ void Player::ChangeState(PlayerStateId id)
 
 	PlayerState* next = states[static_cast<size_t>(id)].get();
 
-
 	if (!next || next == current)
 	{
 		return;
@@ -240,8 +224,8 @@ void Player::ChangeState(PlayerStateId id)
 
 void Player::PlayCutsceneWalk()
 {
-	comp.facingYawDeg = Config::Cutscene::PLAYER_WALK_YAW; 
-	const int walk = ResourceManager::Instance().Model("anim_walk");
+	Data().facingYawDeg = Config::Cutscene::PLAYER_WALK_YAW; 
+	const int walk		= ResourceManager::Instance().Model("anim_walk");
 	if (walk >= 0)
 	{
 		PlayAnim(walk, 0, true, false);
@@ -255,32 +239,31 @@ PlayerStateId  Player::CurrentStateId()const
 
 Capsule Player::GetBodyCapsule()const
 {
-	return Capsule{ comp.CapsuleBottom(), comp.CapsuleTop(), comp.radius };
+	return Capsule{ Data().CapsuleBottom(), Data().CapsuleTop(), Data().radius};
 }
 
 void  Player::TakeDamage(float amount, const VECTOR& attackerPos)
 {
-	if (comp.invincible)
+	if (invincible)
 	{
 		return;   //無敵中（回避など）は無効
 	}
 
-	comp.hp -= amount;
+	Data().hp -= amount;
 
-	if (comp.hp < 0.0f)
+	if (Data().hp < 0.0f)
 	{
-		comp.hp = 0.0f;
+		Data().hp = 0.0f;
 	}
 
-	if (comp.hp <= 0.0f)
+	if (Data().hp <= 0.0f)
 	{
 		ChangeState(PlayerStateId::Dead);
 		return;
 	}
 
-
-	//のけぞり方向＝攻撃元→プレイヤー（後ろに押される）
-	VECTOR knock = VSub(comp.pos, attackerPos);
+	//のけぞり方向＝攻撃元→プレイヤー
+	VECTOR knock = VSub(Data().pos, attackerPos);
 	knock.y = 0.0f;
 	const float len = VSize(knock);
 	if (len > 1e-4f)
@@ -289,37 +272,41 @@ void  Player::TakeDamage(float amount, const VECTOR& attackerPos)
 	}
 	else
 	{
-		knock = VScale(comp.Forward(), -1.0f);   //真上から等は後ろへ
+		knock = VScale(Data().Forward(), -1.0f);   //真上から等は後ろへ
 	}
 
 	//UIの観測者に渡す
-	health.NotifyHealthChanged(comp.hp, Config::Player::Status::PLAYER_HP_MAX, -amount);
+	health.NotifyHealthChanged(Data().hp, Config::Player::Status::PLAYER_HP_MAX, -amount);
 
 	//Damaged状態に方向を渡して遷移
 	auto* dmg = static_cast<DamagedState*>(GetState(PlayerStateId::Damaged));
-	if (dmg) dmg->SetKnockbackDir(knock);
+	if (dmg)
+	{
+		dmg->SetKnockbackDir(knock);
+	}
 	ChangeState(PlayerStateId::Damaged);
 }
 
 void Player::AddUltGauge(float v)
 {
-	comp.ultGauge = std::clamp(comp.ultGauge + v, 0.0f, Config::Player::Ult::ULT_GAUGE_MAX);
+	ultGauge = std::clamp(ultGauge + v, 0.0f, Config::Player::Ult::ULT_GAUGE_MAX);
 }
 
 void Player::TriggerJustDodgeSuccess()
 {
-	slowMoTimer = Config::Player::Evasion::SLOWMO_DURATION;
-	comp.invincible = true;
+	slowMoTimer			= Config::Player::Evasion::SLOWMO_DURATION;
+	invincible			= true;
+	counterDashUsed_	= false;
 	AddUltGauge(Config::Player::Ult::ULT_GAUGE_HIT);
-	counterDashUsed_ = false;
-
-	const int effect = ResourceManager::Instance().Effect("just_dodge");
+	
+	const int effect	= ResourceManager::Instance().Effect("just_dodge");
 	if (effect >= 0)
 	{
 		const VECTOR center = GetJustDodgeSphereCenter();   //体の中心
 		EffectManager::Instance().Play(effect, center, Config::Effect::JUST_DODGE_SCALE);
 	}
-    //後でseとか入れといて
+	SoundManager::Instance().PlaySe(SeId::JustDodge);
+	events.Notify(PlayerEvent::JustDodgeSuccess);
 }
 
 float Player::GetWorldTimeScale() const
@@ -352,75 +339,15 @@ VECTOR Player::CalcMoveDirFromInput() const
 	return dir;
 }
 
-float Player::FloorYAt(const VECTOR& p) const
-{
-	float y = Config::Graund::GROUND_Y;
-	if (stage.GetFloorY(p, y))
-	{
-		return y;
-	}
-	return Config::Graund::GROUND_Y;
-}
-
-void Player::FaceTowardDeg(float targetYawDeg, float dt)
-{
-	float diff = targetYawDeg - comp.facingYawDeg;
-	while (diff > 180.0f)
-	{
-		diff -= 360.0f;
-		
-	}
-	while (diff < -180.0f)
-	{
-		diff += 360.0f;
-	}
-
-	const float maxStep = Config::Player::Move::PLAYER_ROTATE_SPEED * dt;
-	if (std::fabs(diff) <= maxStep)
-	{
-		comp.facingYawDeg = targetYawDeg;
-	}
-	else
-	{
-		comp.facingYawDeg += (diff > 0.0f) ? maxStep : -maxStep;
-	}
-
-	//-180 180 に正規化
-	while (comp.facingYawDeg > 180.0f)
-	{
-		comp.facingYawDeg -= 360.0f;
-	}
-
-	while (comp.facingYawDeg < -180.0f)
-	{
-		comp.facingYawDeg += 360.0f;
-	}
-	
-}
-
-void Player::ApplyGravity(float dt)
-{
-	comp.vy		-= Config::Player::Status::GRAVITY * dt;
-	comp.pos.y	+= comp.vy * dt;
-
-	const float floorY = FloorYAt(comp.pos);
-
-	if (comp.pos.y <= floorY)
-	{
-		comp.pos.y = floorY;
-		comp.vy = 0.0f;
-	}
-}
-
 void Player::ApplyHorizontalMove(const VECTOR& dir, float speed, float dt)
 {
-	comp.pos.x += dir.x * speed * dt;
-	comp.pos.z += dir.z * speed * dt;
-	comp.velocity = VScale(dir, speed);
+	Data().pos.x += dir.x * speed * dt;
+	Data().pos.z += dir.z * speed * dt;
+	Data().velocity = VScale(dir, speed);
 
 	//移動後、壁にめり込んでいたら押し戻す
-	comp.pos = stage.ResolveWall(comp.pos, comp.radius, comp.height);
-	comp.pos = stage.ResolveDoorWall(comp.pos, comp.radius);
+	Data().pos = stage.ResolveWall(Data().pos, Data().radius, Data().height);
+	Data().pos = stage.ResolveDoorWall(Data().pos, Data().radius);
 }
 
 void Player::Draw() const
@@ -433,12 +360,12 @@ void Player::Draw() const
 	//モデルがあれば描く
 	if (modelHandle >= 0)
 	{
-		MV1SetPosition(modelHandle, comp.pos);
+		MV1SetPosition(modelHandle, Data().pos);
 		MV1SetScale(modelHandle, VGet(modelScale, modelScale, modelScale));
 
 		//カメラとの距離で不透明度を決める（近いほど薄く）
 		const VECTOR camPos = camera.GetEyePosition();
-		const float d = VSize(VSub(comp.pos, camPos));
+		const float d = VSize(VSub(Data().pos, camPos));
 
 		//FADE_FAR より遠ければ不透明、FADE_NEAR より近ければ完全透明
 		float alpha = 1.0f;
@@ -459,14 +386,13 @@ void Player::Draw() const
 		const int a = static_cast<int>(alpha * 255.0f);
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, a);
 
-		const float yawRad = (comp.facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
+		const float yawRad = (Data().facingYawDeg + modelYawOffsetDeg) * DX_PI_F / 180.0f;
 		MV1SetRotationXYZ(modelHandle, VGet(0.0f, yawRad, 0.0f));
 
 		SetUseLighting(FALSE);
 		if (IsSlowMoActive() && rimVS_ >= 0 && rimPS_ >= 0)
 		{
 			//ジャスト回避中：リムライトシェーダーで描く
-
 			//リムライトのパラメータを定数バッファに書き込む
 			if (rimCB_ >= 0)
 			{
@@ -531,11 +457,11 @@ void Player::Draw() const
 	{
 		//色分け（既存）
 		unsigned int col = GetColor(80, 200, 255);
-		if (comp.enhanced)
+		if (enhanced)
 		{
 			col = GetColor(255, 90, 60);
 		}
-		else if (comp.invincible)
+		else if (invincible)
 		{
 			col = GetColor(255, 240, 120);
 		}
@@ -544,11 +470,11 @@ void Player::Draw() const
 		
 
 		const unsigned int spec = GetColor(255, 255, 255);
-		DrawCapsule3D(comp.CapsuleBottom(), comp.CapsuleTop(), comp.radius, 16, col, spec, TRUE);
+		DrawCapsule3D(data.CapsuleBottom(), data.CapsuleTop(), data.radius, 16, col, spec, TRUE);
 
 		//向きの線
-		const VECTOR center = VGet(comp.pos.x, comp.pos.y + comp.height * 0.5f, comp.pos.z);
-		const VECTOR tip = VAdd(center, VScale(comp.Forward(), comp.radius * 2.5f));
+		const VECTOR center = VGet(data.pos.x, data.pos.y + data.height * 0.5f, data.pos.z);
+		const VECTOR tip = VAdd(center, VScale(data.Forward(), data.radius * 2.5f));
 		DrawLine3D(center, tip, GetColor(255, 255, 0));
 
 		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
@@ -561,8 +487,8 @@ void Player::Draw() const
 	DrawFormatString(10, 60, GetColor(255, 255, 255),
 		"Player State:%d  HP:%.0f/%.0f  Ult:%.0f  %s",
 		static_cast<int>(CurrentStateId()),
-		comp.hp, Config::Player::Status::PLAYER_HP_MAX, comp.ultGauge,
-		comp.enhanced ? "[ENHANCED]" : "");
+		data.hp, Config::Player::Status::PLAYER_HP_MAX, ultGauge,
+		enhanced ? "[ENHANCED]" : "");
 #endif
 }
 
@@ -583,6 +509,7 @@ void Player::ToggleKatanaDraw()
 		PlayAnim(draw, 0, false, false);
 		drawingKatana = true;
 		drawTimer = 0.0f;
+		
 	}
 }
 
@@ -599,8 +526,8 @@ void Player::UpdateAnimOnly(float dt)
 
 	if (modelHandle >= 0)
 	{
-		const float yawRad = comp.facingYawDeg * DX_PI_F / 180.0f;
-		MV1SetPosition(modelHandle, comp.pos);
+		const float yawRad = Data().facingYawDeg * DX_PI_F / 180.0f;
+		MV1SetPosition(modelHandle, Data().pos);
 		MV1SetRotationXYZ(modelHandle, VGet(0.0f, yawRad, 0.0f));
 		MV1SetScale(modelHandle, VGet(modelScale, modelScale, modelScale));
 	}
@@ -624,15 +551,13 @@ void Player::PlayCutsceneIdle()
 bool Player::ShouldStartAwaken() const
 {
 	//HPが閾値以下で、まだ覚醒演出を発動していない、生きている
-	return !awakenTriggered
-		&& comp.hp > 0.0f
-		&& comp.HpRate() <= Config::Player::Status::PLAYER_ENHANCE_THRESHOLD;
+	return !awakenTriggered&& Data().hp > 0.0f&& (Data().hp / Config::Player::Status::PLAYER_HP_MAX) <= Config::Player::Status::PLAYER_ENHANCE_THRESHOLD;
 }
 
 void Player::EnterEnhanced()
 {
 	awakenTriggered = true;
-	comp.enhanced = true;   //ここで強化状態に
+	enhanced		= true;   //ここで強化状態に
 }
 
 float Player::GetCurrentAttackPower() const
@@ -644,7 +569,7 @@ float Player::GetCurrentAttackPower() const
 	}
 	else
 	{
-		switch (comp.comboIndex)
+		switch (comboIndex)
 		{
 		case 0:  power = Config::Player::Attack::ATTACK_POWER_1; break;
 		case 1:  power = Config::Player::Attack::ATTACK_POWER_2; break;
@@ -654,7 +579,7 @@ float Player::GetCurrentAttackPower() const
 	}
 
 	//強化状態ならダメージアップ
-	if (comp.enhanced)
+	if (enhanced)
 	{
 		power *= Config::Player::Attack::ENHANCED_DAMAGE_MULT;   
 	}
@@ -669,9 +594,7 @@ float Player::GetCurrentHitEffectScale() const
 	{
 		return Config::Effect::JUMP_ATTACK_HIT_SCALE;  
 	}
-
-	
-	switch (comp.comboIndex)
+	switch (comboIndex)
 	{
 	case 0:  return Config::Effect::HIT_SCALE_1;
 	case 1:  return Config::Effect::HIT_SCALE_2;
@@ -680,6 +603,42 @@ float Player::GetCurrentHitEffectScale() const
 	}
 }
 
+void Player::UpdateKatanaSwitch(float dt)
+{
+	if (drawingKatana)
+	{
+		drawTimer += dt;
+
+		if (!drawSePlayed && drawTimer >= Config::Katana::DRAW_SE_TIME)
+		{
+			SoundManager::Instance().PlaySe(SeId::DrawKatana);
+			drawSePlayed = true;
+		}
+
+		if (drawTimer >= Config::Katana::DRAW_SWITCH_TIME)
+		{
+			katana.Unsheathe();
+			drawingKatana = false;
+		}
+	}
+
+	if (sheathingKatana)
+	{
+		sheatheTimer += dt;
+
+		if (!sheatheSePlayed && sheatheTimer >= Config::Katana::SHEATHE_SE_TIME)
+		{
+			SoundManager::Instance().PlaySe(SeId::SheatheKatana);
+			sheatheSePlayed = true;
+		}
+
+		if (sheatheTimer >= Config::Katana::SHEATHE_SWITCH_TIME)
+		{
+			katana.Sheathe();
+			sheathingKatana = false;
+		}
+	}
+}
 
 #if defined(_DEBUG)
 void Player::DebugAdjustKatanaInput()

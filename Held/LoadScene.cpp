@@ -42,8 +42,13 @@ void LoadScene::Draw()
 
 void LoadScene::StartAsyncLoad()
 {
-	ResourceManager::Instance().LoadJson("Data/json/Resources.json");
+	if (!result.gameResourceLoaded)
+	{
+		ResourceManager::Instance().LoadJson("Data/json/Resources.json");
+		result.gameResourceLoaded = true;
+	}
 }
+	
 
 void LoadScene::DrawProgressBar() const
 {

@@ -36,7 +36,7 @@ void TargetSystem::Update(EnemyManager& enemies)
 	//ƒ^[ƒQƒbƒg‚ª€‚ñ‚¾/Á‚¦‚½‚ç‰ğœ
 	if (target != nullptr && target->IsDead())
 	{
-		//€‚ñ‚¾‚çŸ‚Ì“G‚É©“®‚ÅˆÚ‚·i‚¢‚È‚¯‚ê‚Î‰ğœj
+		//€‚ñ‚¾‚çŸ‚Ì“G‚É©“®‚ÅˆÚ‚·
 		Enemy* next = enemies.NextAliveEnemy(target, +1);
 		target = (next != target) ? next : nullptr;
 	}
@@ -46,12 +46,12 @@ bool TargetSystem::GetTargetPosition(VECTOR& out) const
 {
 	if (boss)
 	{
-		out = boss->Comp().pos;
+		out = boss->Data().pos;
 		return true;
 	}
 	if (target)
 	{
-		out = target->Comp().pos;
+		out = target->Data().pos;
 		return true;
 	}
 	return false;

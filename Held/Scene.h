@@ -1,5 +1,8 @@
 #pragma once
 #include "InputSystem.h"
+#include "GameResult.h"
+#include "SoundManager.h"
+#include "ResourceManager.h"
 
 //各シーンのid
 enum class SceneId
@@ -22,7 +25,7 @@ public:
 	/// コンストラクタ
 	/// </summary>
 	/// <param name="input"></param>操作関係
-	explicit Scene(InputSystem& input) : input(input) {}
+	explicit Scene(InputSystem& input, GameResult& result) : input(input), result(result) {}
 
 	/// <summary>
 	/// デストラクタ
@@ -75,7 +78,25 @@ protected:
 		requestId = id;
 	}
 
+	/// <summary>
+	/// リソースを全解放してから、指定のシーンへ移る
+	/// </summary>
+	/// <param name="id"></param>移動先のシーン
+	void RequestChangeWithUnload(SceneId id)
+	{
+		//音を止めてから解放する（解放済みハンドルを参照しないように）
+		SoundManager::Instance().Reset();
+		ResourceManager::Instance().UnloadAll();
+
+		//次回また読み込むようにフラグを戻す
+		result.titleResourceLoaded = false;
+		result.gameResourceLoaded = false;
+
+		RequestChange(id);
+	}
+
 	InputSystem& input;
+	GameResult& result;
 private:
 	bool requested		= false;			//次のシーンに切り替えるかのフラグ
 	SceneId requestId	= SceneId::Title;	//最初のシーンはタイトル

@@ -6,7 +6,9 @@
 /// <summary>
 /// 雑魚敵のデータを持つコンポーネント
 /// </summary>
-struct EnemyComponent
+
+/*
+* struct EnemyComponent
 {
 	//トランスフォーム
 	VECTOR pos				= VGet(0.0f, 0.0f, 0.0f); //足元基準のワールド座標
@@ -38,3 +40,4 @@ struct EnemyComponent
 	VECTOR CapsuleBottom() const { return VGet(pos.x, pos.y + radius, pos.z); }
 	VECTOR CapsuleTop()    const { return VGet(pos.x, pos.y + height - radius, pos.z); }
 };
+*/

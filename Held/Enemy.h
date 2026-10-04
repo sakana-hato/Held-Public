@@ -1,25 +1,25 @@
 #pragma once
+#include "Character.h"
 #include "Capsule.h"
 #include "Animator.h"
 #include "EnemyState.h"
 #include "EnemyStateId.h"
-#include "EnemyComponent.h"
 
-struct SharedContext;
+
 class Stage;
 class Player;
 
 /// <summary>
 /// 雑魚敵の本体クラス
  /// </summary>
-class Enemy
+class Enemy:public Character
 {
 public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
 	/// <param name="ctx"></param>共通データ
-	explicit Enemy(SharedContext& ctx, Stage& stage,Player& player);
+	explicit Enemy(Stage& stage,Player& player);
 
 	/// <summary>
 	/// デストラクタ
@@ -36,12 +36,6 @@ public:
 	/// <param name="handle"></param>モデルハンドル
 	/// <param name="scale"></param>サイズ
 	void SetModel(int handle, float scale);
-
-	/// <summary>
-	/// モデルの座標をセットする
-	/// </summary>
-	/// <param name="pos"></param>座標
-	void SetPosition(const VECTOR& pos) { comp.pos = pos; }
 
 	/// <summary>
 	/// 更新処理
@@ -114,21 +108,6 @@ public:
 	/// </summary>
 	EnemyStateId CurrentStateId() const;
 
-	//データアクセス
-	EnemyComponent& Comp() { return comp; }
-	const EnemyComponent& Comp() const { return comp; }
-	SharedContext& Ctx() { return ctx_; }
-
-	/// <summary>
-	/// 死亡したかどうか
-	/// </summary>
-	bool IsDead()  const { return comp.IsDead(); }
-
-	/// <summary>
-	/// 生きているかどうか
-	/// </summary>
-	/// <returns></returns>
-	bool IsAlive() const { return !comp.IsDead(); }
 
 	/// <summary>
 	/// 死亡して敵が消滅待ちか
@@ -139,25 +118,6 @@ public:
 	/// 雑魚敵の削除を要求する
 	/// </summary>
 	void SetWantsRemove() { wantsRemove = true; }
-
-	/// <summary>
-	/// 床の高さを返す
-	/// </summary>
-	/// <param name="pos"></param>調べたい位置
-	float FloorYAt(const VECTOR& pos) const;
-
-	/// <summary>
-	/// 重力を適応する
-	/// </summary>
-	/// <param name="dt"></param>デルタタイム
-	void  ApplyGravity(float dt);
-
-	/// <summary>
-	/// 旋回速度の範囲で少しずつ向き直る
-	/// </summary>
-	/// <param name="targetYawDeg"></param>向きたい方向
-	/// <param name="dt">		  </param>デルタタイム
-	void  FaceTowardDeg(float targetYawDeg, float dt);
 
 	/// <summary>
 	/// プレイヤーへ向かって進む
@@ -190,6 +150,29 @@ public:
 	void PlayAnim(int animModel, int animIndex, bool loop);
 
 	/// <summary>
+	/// idle時のボイスタイマーをリセットする
+	/// </summary>
+	void ResetIdleVoiceTimer();
+
+	/// <summary>
+	/// 発見ボイスのハンドルを取得する
+	/// </summary>
+	int GetVoiceNoticeHandle() const { return voiceNoticeHandle; }
+
+	/// <summary>
+	/// 被弾ボイスのハンドルを取得する
+	/// </summary>
+	int GetVoiceDamagedHandle() const { return voiceDamagedHandle; }
+
+	/// <summary>
+	/// 攻撃ボイスのハンドルを取得する
+	/// </summary>
+	int GetVoiceAttackHandle() const { return voiceAttackHandle; }
+
+	bool HasNoticedPlayer() const { return hasNoticedPlayer; }
+	void SetNoticedPlayer(bool b) { hasNoticedPlayer = b; }
+
+	/// <summary>
 	/// アニメーターを取得する
 	/// </summary>
 	Animator& Anim() { return animator; }
@@ -198,6 +181,9 @@ public:
 
 	Player& GetPlayer() const { return player; }
 
+protected:
+		float Gravity()   const override { return Config::Player::Status::GRAVITY; }
+		float TurnSpeed() const override { return Config::Enemy::TURN_SPEED; }
 private:
 	/// <summary>
 	/// 各状態のインスタンスを生成する
@@ -211,11 +197,8 @@ private:
 	/// <returns></returns>実際に進む方向
 	VECTOR AvoidObstacles(const VECTOR& desiredDir) const;
 
-	Stage& stage;
+	
 	Player& player;
-
-	SharedContext& ctx_;	//共通データ
-	EnemyComponent comp;	//雑魚敵のデータ
 	Animator animator;		//アニメ再生
 
 	//状態はIdをそのまま添字にして引く
@@ -231,4 +214,13 @@ private:
 	float attackCooldown		= 0.0f;		//攻撃クールダウン
 	bool  wantsRemove			= false;	//削除待ちかどうか
 	bool  attackActive			= false;	//攻撃判定が有効か
+	bool hasNoticedPlayer		= false;   //プレイヤーを発見済みか
+
+	int voiceIdleHandle			= -1;   //待機ボイス
+	int voiceNoticeHandle		= -1;   //発見ボイス
+	int voiceDamagedHandle		= -1;   //被弾ボイス
+	int voiceAttackHandle		= -1;   //攻撃ボイス
+
+	float idleVoiceTimer		= 0.0f;   //待機ボイスのタイマー
+	float idleVoiceInterval		= 0.0f;   //次に鳴らすまでの間隔（ランダム）
 };

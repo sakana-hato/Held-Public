@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "Precompiled.h"
 #include "Stage.h"
+#include "SoundManager.h"
 
 Stage::~Stage()
 {
@@ -386,6 +387,7 @@ void Stage::PlayDoor()
 	doorTime	= 0.0f;
 	doorPlaying = true;
 	doorReverse = false;
+	SoundManager::Instance().PlaySe(SeId::DoorOpen);
 }
 
 void Stage::CloseDoor()
@@ -394,6 +396,7 @@ void Stage::CloseDoor()
 	doorTime	= (doorTotalA > doorTotalB) ? doorTotalA : doorTotalB;
 	doorPlaying = true;
 	doorReverse = true;  
+	SoundManager::Instance().PlaySe(SeId::DoorClose);
 }
 
 void Stage::Update(float dt)

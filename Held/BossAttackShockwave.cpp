@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Boss.h"
 #include "ResourceManager.h"
+#include "SoundManager.h"
 #include "SharedContext.h"
 #include "Player.h"
 #include "CameraSystem.h"
@@ -24,13 +25,13 @@ void BossAttackShockwave::OnStart(Boss& boss)
 	}
 
 	//警告円を足元に出す
-	boss.Warning().Init(boss.Comp().pos, Config::Boss::Shockwave::RADIUS, Config::Boss::Shockwave::CHARGE_TIME);
+	boss.Warning().Init(boss.Data().pos, Config::Boss::Shockwave::RADIUS, Config::Boss::Shockwave::CHARGE_TIME);
 }
 
 bool BossAttackShockwave::Update(Boss& boss, float dt)
 {
 	timer += dt;
-	auto& comp = boss.Comp();
+	auto& data = boss.Data();
 
 	switch (step)
 	{
@@ -48,19 +49,23 @@ bool BossAttackShockwave::Update(Boss& boss, float dt)
 			//衝撃波発動
 			{
 				Player& pl = boss.GetPlayer();
-				VECTOR d = VSub(pl.GetPosition(), comp.pos);
+				VECTOR d = VSub(pl.GetPosition(), data.pos);
 				d.y = 0.0f;
 				const float dist = VSize(d);
-				const float floorY = boss.FloorYAt(comp.pos);
+				const float floorY = boss.FloorYAt(data.pos);
 				const bool airborne = (pl.GetPosition().y > floorY + 50.0f);
 
+				
 				if (dist <= Config::Boss::Shockwave::RADIUS && !airborne)
 				{
-					pl.TakeDamage(Config::Boss::Shockwave::POWER, comp.pos);
+					pl.TakeDamage(Config::Boss::Shockwave::POWER, data.pos);
+					
 				}
 			}
 
 			boss.Camera().AddShake(18.0f);
+			SoundManager::Instance().PlaySe(SeId::BossJumpLand);
+
 			boss.Warning().Stop();
 
 			count++;
@@ -94,7 +99,7 @@ bool BossAttackShockwave::Update(Boss& boss, float dt)
 			{
 				boss.PlayAnimImmediate(anim, 0, false);
 			}
-			boss.Warning().Init(comp.pos, Config::Boss::Shockwave::RADIUS, Config::Boss::Shockwave::REPEAT_TIME);
+			boss.Warning().Init(data.pos, Config::Boss::Shockwave::RADIUS, Config::Boss::Shockwave::REPEAT_TIME);
 		}
 		break;
 	}

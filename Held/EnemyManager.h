@@ -1,7 +1,7 @@
 #pragma once
 #include "Enemy.h"
 
-struct SharedContext;
+
 class Player;
 class Stage;
 
@@ -13,8 +13,8 @@ public:
 	/// コンストラクタ
 	/// </summary>
 	/// <param name="ctx"></param>共通データ
-	explicit EnemyManager(SharedContext& ctx,Stage& stage, Player& player)
-		: ctx_(ctx), stage(stage), player(player) {}
+	explicit EnemyManager(Stage& stage, Player& player)
+		: stage(stage), player(player) {}
 
 	/// <summary>
 	/// //敵を1体生成して指定位置に置く
@@ -77,6 +77,11 @@ public:
 	/// <param name="radius"></param>半径
 	bool AnyAttackHitsSphere(const VECTOR& center, float radius) const;
 
+	/// <summary>
+	/// 敵同士が重ならないように押し戻す
+	/// </summary>
+	void ResolveEnemyCollision();
+
 	Enemy* FindNearest(const VECTOR& from, float maxRange) const;
 
 	void Clear() { enemies.clear(); }
@@ -86,7 +91,6 @@ public:
 private:
 	Stage& stage;
 	Player& player;
-	SharedContext& ctx_;//共通データ
 	std::vector<std::unique_ptr<Enemy>> enemies;
 
 	//二重ヒット防止

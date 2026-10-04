@@ -70,12 +70,13 @@ public:
 	/// パッドを直接取得する
 	/// </summary>
 	GamepadDevice& Pad() { return *pad; }
-private:
-	std::unique_ptr<KeyboardDevice> keyboard;	//キーボード入力
-	std::unique_ptr<GamepadDevice>  pad;		//ゲームパッド入力
 
 	/// <summary>
 	/// パッドが接続されているか
 	/// </summary>
 	bool IsPadConnected() const;
+
+private:
+	std::unique_ptr<KeyboardDevice> keyboard;	//キーボード入力
+	std::unique_ptr<GamepadDevice>  pad;		//ゲームパッド入力
 };

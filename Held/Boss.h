@@ -1,5 +1,5 @@
 #pragma once
-#include "BossComponent.h"
+#include "Character.h"
 #include "BossStateId.h"
 #include "Capsule.h"
 #include "Animator.h"
@@ -9,28 +9,28 @@
 #include "Precompiled.h"
 #include "RockRing.h"
 #include "HealthSubject.h"
+#include "Difficulty.h"
 
 //前方宣言
-struct SharedContext;
 class  BossState;
 class  BossAttack;
-class CameraSystem;
-class Stage;
-class Player;
-class ProjectileManager;
+class  CameraSystem;
+class  Stage;
+class  Player;
+class  ProjectileManager;
 
 /// <summary>
 /// ボスの本体 プレイヤーと敵と同じくstateマシン管理
 /// コメントを書かなければ
 /// </summary>
-class Boss
+class Boss:public Character
 {
 public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
 	/// <param name="ctx"></param>共通データ
-	explicit Boss(SharedContext& ctx, CameraSystem& camera, Stage& stage,Player& player, ProjectileManager& projectiles);
+	explicit Boss(CameraSystem& camera, Stage& stage,Player& player, ProjectileManager& projectiles, Difficulty difficulty);
 
 	/// <summary>
 	/// デストラクタ
@@ -49,12 +49,6 @@ public:
 	/// </summary>
 	/// <param name="handle"></param>ハンドル
 	void SetSword(int handle);
-
-	/// <summary>
-	/// ボスの座標をセットする
-	/// </summary>
-	/// <param name="pos"></param>座標
-	void SetPosition(const VECTOR& pos) { comp.pos = pos; }
 
 	/// <summary>
 	/// 更新
@@ -150,20 +144,7 @@ public:
 	/// <param name="frame"></param>
 	void    SetAttackFrame(int frame) { attackFrame = frame; }  
 
-	/// <summary>
-	/// ボスが死亡したかどうか
-	/// </summary>
-	/// <returns></returns>
-	bool IsDead()  const { return comp.IsDead(); }
-
-	/// <summary>
-	/// ボスが生きているかどうか
-	/// </summary>
-	/// <returns></returns>
-	bool IsAlive() const { return !comp.IsDead(); }
-
 	//プレイヤー関連ヘルパー
-
 	/// <summary>
 	/// プレイヤーとの距離
 	/// </summary>
@@ -173,8 +154,6 @@ public:
 	VECTOR DirToPlayer() const;
 
 	float  YawToPlayerDeg() const;
-
-	void   FaceTowardDeg(float targetYawDeg, float dt);
 
 	void   MoveTowardPlayer(float speed, float dt);
 
@@ -187,15 +166,6 @@ public:
 	
 
 	WarningCircle& Warning() { return warning; }
-
-	//物理
-	float FloorYAt(const VECTOR& p) const;
-
-	/// <summary>
-	/// 重力を適応するか
-	/// </summary>
-	/// <param name="dt"></param>
-	void  ApplyGravity(float dt);
 
 	//アニメ
 
@@ -261,13 +231,6 @@ public:
 
 	void DrawBeamWarning() const;
 
-	BossComponent& Comp() { return comp; }
-
-	const BossComponent& Comp() const { return comp; }
-
-	SharedContext& Ctx() { return ctx_; }
-
-	const SharedContext& Ctx() const { return ctx_; }
 
 	CameraSystem& Camera() { return camera; }
 	Stage& GetStage() const { return stage; }
@@ -296,7 +259,9 @@ public:
 
 	void AddHealthObserver(HealthObserver* obs) { health.AddHealthObserver(obs); }
 
-	void NotifyInitialHp() { health.NotifyHealthChanged(comp.hp, Config::Boss::HP_MAX, 0.0f); }
+	void NotifyInitialHp() { health.NotifyHealthChanged(data.hp, Config::Boss::HP_MAX, 0.0f); }
+
+	float HpRate() const { return (hpMax > 0.0f) ? (data.hp / hpMax) : 0.0f; }
 
 	Player& GetPlayer() const { return player; }
 
@@ -306,17 +271,20 @@ public:
 	void DebugDrawSwordAxis()const;
 #endif
 
+protected:
+		float Gravity()   const override { return Config::Player::Status::GRAVITY; }
+		float TurnSpeed() const override { return Config::Boss::TURN_SPEED; }
+
 private:
 	void BuildStates();
 	void BuildAttacks();
 
-	SharedContext&	ctx_;
+	
 	CameraSystem& camera;
-	Stage& stage;
 	Player& player;
 	ProjectileManager& projectiles;
+	Difficulty difficulty;
 
-	BossComponent	comp;
 	BoneAttachment	sword;
 	WarningCircle	warning;
 	StunChicks		stunChicks;
@@ -329,6 +297,10 @@ private:
 	float modelYawOffsetDeg = 0.0f;
 
 	bool hitPlayer			= false;
+
+	float hpMax			= Config::Boss::HP_MAX;
+	int   phase			= 0;
+	bool  hitReceived	= false;
 
 	//状態
 	std::vector<std::unique_ptr<BossState>> states;
